@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Море под облаками: Гнездо Шурша — Обновление 2.0 (42 Скина • 8X Рендер • 100 Фич)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #090d1c;
+            font-family: 'Montserrat', sans-serif;
+            color: #f8fafc;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* UI Overlays */
+        .ui-layer {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px;
+        }
+
+        .pointer-auto { pointer-events: auto; }
+
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(12, 19, 36, 0.62);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: all 0.25s ease;
+        }
+
+        .glass-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 12px;
+            color: #fff;
+            padding: 8px 14px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .glass-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.12));
+            transform: translateY(-1px);
+            border-color: rgba(253, 224, 71, 0.6);
+        }
+
+        .glass-btn.active-pill {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border-color: #7dd3fc;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.45);
+        }
+
+        .glass-btn.primary {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: #fde68a;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+
+        /* Top HUD */
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stats-cluster {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 225px;
+            padding: 10px 14px;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 7px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 99px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.2s ease;
+        }
+
+        /* Render Quality Bar (ЛИНЕЙНАЯ / 2X / 4X / 8X) */
+        .render-bar {
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .render-pills {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .r-pill {
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            border-radius: 7px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .r-pill.active {
+            background: #ef4444;
+            border-color: #fca5a5;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.55);
+        }
+
+        .r-pill.aa-active {
+            background: #10b981;
+            border-color: #6ee7b7;
+            color: #fff;
+        }
+
+        .world-banner {
+            text-align: center;
+            padding: 8px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+        }
+
+        .world-index {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fcd34d;
+            font-weight: 700;
+        }
+
+        .world-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.12rem;
+            font-weight: 700;
+        }
+
+        .world-subtitle {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.78);
+        }
+
+        /* Audio Player Widget */
+        .audio-widget {
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 215px;
+        }
+
+        .audio-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: #fde68a;
+            font-weight: 600;
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mini-btn {
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            border-radius: 7px;
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .mini-btn:hover { background: rgba(255,255,255,0.26); }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 65px;
+            height: 4px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 5px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #fcd34d;
+            cursor: pointer;
+        }
+
+        /* Quest & Combo Floating Pill */
+        .quest-pill {
+            position: absolute;
+            top: 96px;
+            left: 12px;
+            padding: 8px 12px;
+            font-size: 0.74rem;
+            max-width: 250px;
+            border-left: 3px solid #fbbf24;
+        }
+
+        /* Story Toast */
+        .story-toast {
+            position: absolute;
+            bottom: 76px;
+            left: 50%;
+            transform: translateX(-50%) translateY(15px);
+            max-width: 580px;
+            width: 90%;
+            padding: 12px 20px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s ease;
+            border-color: rgba(253, 224, 71, 0.5);
+            background: rgba(12, 19, 36, 0.85);
+        }
+
+        .story-toast.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Minigame Overlay */
+        #minigameModal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            padding: 22px 28px;
+            text-align: center;
+            z-index: 35;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+            background: rgba(12, 20, 38, 0.92);
+            border: 1px solid #38bdf8;
+        }
+
+        #minigameModal.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .rune-row { display: flex; justify-content: center; gap: 14px; margin-top: 14px; }
+        .rune-btn {
+            width: 60px; height: 60px; border-radius: 14px;
+            border: 2px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.08);
+            color: #fff; font-size: 1.4rem; cursor: pointer;
+        }
+        .rune-btn.lit { background: #38bdf8; box-shadow: 0 0 22px #38bdf8; transform: scale(1.08); }
+
+        /* Fullscreen Modals */
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 11, 24, 0.78);
+            backdrop-filter: blur(8px);
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-backdrop.hidden { opacity: 0; pointer-events: none; }
+
+        .modal-card {
+            max-width: 1020px;
+            width: 100%;
+            max-height: 89vh;
+            overflow-y: auto;
+            padding: 24px;
+            position: relative;
+        }
+
+        .game-logo {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(1.6rem, 3.6vw, 2.7rem);
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(to right, #fef3c7, #fcd34d, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(205px, 1fr));
+            gap: 11px;
+            margin-top: 14px;
+        }
+
+        .item-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 14px;
+            padding: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .item-card:hover:not(.locked) {
+            background: rgba(255,255,255,0.14);
+            border-color: #fcd34d;
+            transform: translateY(-2px);
+        }
+
+        .item-card.selected {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.18);
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+        }
+
+        .item-card.locked { opacity: 0.55; cursor: not-allowed; }
+
+        .cat-tabs {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 0.78rem;
+        }
+
+        .feature-row {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Secret Admin Star Button */
+        #secretAdminBtn {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        #secretAdminBtn:hover, #secretAdminBtn.unlocked {
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.22);
+            border-color: #34d399;
+            box-shadow: 0 0 14px rgba(52, 211, 153, 0.6);
+            transform: scale(1.15) rotate(72deg);
+        }
+
+        .hud-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding-right: 34px;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.28); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<!-- Secret Admin Unlock Button -->
+<button id="secretAdminBtn" class="pointer-auto" title="Тайная звезда Хранителя: открыть все 42 скина, 20 миров и 5000 нот">✦</button>
+
+<!-- Active Gameplay HUD -->
+<div class="ui-layer" id="hudLayer">
+    <div class="hud-top">
+        <!-- Stats & Combo -->
+        <div class="glass-panel stats-cluster pointer-auto">
+            <div class="bar-row">
+                <span>🔥 Тепло</span>
+                <div class="bar-track"><div class="bar-fill" id="warmthBar" style="width:100%; background:linear-gradient(90deg,#f97316,#facc15);"></div></div>
+            </div>
+            <div class="bar-row">
+                <span>🐋 Покой</span>
+                <div class="bar-track"><div class="bar-fill" id="harmonyBar" style="width:85%; background:linear-gradient(90deg,#38bdf8,#818cf8);"></div></div>
+            </div>
+            <div class="bar-row" style="justify-content:space-between;">
+                <span>🎵 <strong id="notesCount" style="color:#fde68a;">0</strong></span>
+                <span id="comboBadge" style="color:#f472b6; font-weight:800;">x1 Комбо</span>
+                <span id="shieldBadge" style="color:#38bdf8; opacity:0.35;">🛡️</span>
+                <span id="magnetBadge" style="color:#a78bfa; opacity:0.35;">🧲</span>
+                <span id="distanceLabel" style="color:#cbd5e1;">0 м</span>
+            </div>
+        </div>
+
+        <!-- Render Filtering & Supersampling Control (ЛИНЕЙНАЯ | 2X | 4X | 8X) -->
+        <div class="glass-panel render-bar pointer-auto">
+            <div style="font-size:0.65rem; letter-spacing:1px; color:#94a3b8; font-weight:700;">
+                РЕНДЕР И ФИЛЬТРАЦИЯ • <span id="fpsCounter" style="color:#34d399;">60 FPS</span>
+            </div>
+            <div class="render-pills" id="renderScalePills">
+                <button class="r-pill" data-scale="1">ЛИНЕЙНАЯ</button>
+                <button class="r-pill" data-scale="2">2X</button>
+                <button class="r-pill" data-scale="4">4X</button>
+                <button class="r-pill active" data-scale="8">8X</button>
+                <button class="r-pill" id="splitCompareBtn" title="Сравнение ЛИНЕЙНАЯ / 2X / 4X / 8X на экране">◫ Сравнить</button>
+            </div>
+            <div class="render-pills" id="aaPills">
+                <button class="r-pill" data-aa="NO AA">NO AA</button>
+                <button class="r-pill" data-aa="FXAA">FXAA</button>
+                <button class="r-pill" data-aa="MSAA 4x">MSAA 4x</button>
+                <button class="r-pill aa-active" data-aa="MSAA 8x">MSAA 8x</button>
+            </div>
+        </div>
+
+        <!-- Current World Info -->
+        <div class="glass-panel world-banner pointer-auto" onclick="openModal('worldsModal')">
+            <div class="world-index" id="hudWorldIndex">МИР 1 / 20</div>
+            <div class="world-title" id="hudWorldTitle">Белый Порт</div>
+            <div class="world-subtitle" id="hudWorldMechanic">Утро над облаками • Восходящие бризы</div>
+        </div>
+
+        <!-- Web Audio Synthesizer Player -->
+        <div class="glass-panel audio-widget pointer-auto">
+            <div class="audio-title-row">
+                <span>🎼 <span id="trackName">1. Утро Белого Порта</span></span>
+                <span id="trackIndexBadge">1/10</span>
+            </div>
+            <div class="audio-controls">
+                <button class="mini-btn" id="prevTrackBtn">⏮</button>
+                <button class="mini-btn" id="playPauseBtn">▶</button>
+                <button class="mini-btn" id="nextTrackBtn">⏭</button>
+                <span style="font-size:0.72rem; margin-left:3px;">🔊</span>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.45">
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Quest Widget -->
+    <div class="glass-panel quest-pill pointer-auto" id="questWidget">
+        <div style="color:#fde68a; font-weight:700; font-size:0.68rem;">📜 ТЕКУЩЕЕ ЗАДАНИЕ</div>
+        <div id="questText" style="margin-top:2px;">Соберите 15 небесных нот (0/15)</div>
+    </div>
+
+    <!-- Story Echo Toast -->
+    <div class="glass-panel story-toast" id="storyToast">
+        <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1.8px; color:#fbbf24; font-weight:700;" id="storySpeaker">Эхо Леи</div>
+        <div style="font-size:0.88rem; font-style:italic; margin-top:3px;" id="storyText">«Помни, Мира: Тихоходы не спят вечно...»</div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="hud-bottom">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;" class="pointer-auto">
+            <div class="glass-panel" id="dashTrigger" style="padding:7px 12px; font-size:0.76rem; cursor:pointer;">
+                💨 Рывок [Shift]: <strong id="dashStatus" style="color:#34d399;">ГОТОВ</strong>
+            </div>
+            <div class="glass-panel" id="slowMoTrigger" style="padding:7px 12px; font-size:0.76rem; cursor:pointer;">
+                ⏳ Замедление [E]: <strong id="slowMoStatus" style="color:#38bdf8;">100%</strong>
+            </div>
+            <div class="glass-panel" id="loopTrigger" style="padding:7px 12px; font-size:0.76rem; cursor:pointer;">
+                🔄 Петля [Q]
+            </div>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap;" class="pointer-auto">
+            <button class="glass-btn" onclick="openModal('featuresModal')">⚡ 100 Фич</button>
+            <button class="glass-btn" onclick="openModal('worldsModal')">🗺️ 20 Миров</button>
+            <button class="glass-btn" onclick="openModal('skinsModal')">🦸 42 Скина</button>
+            <button class="glass-btn" onclick="openModal('menuModal')">☰ Меню</button>
+        </div>
+    </div>
+</div>
+
+<!-- Musical Pedestal Minigame Modal -->
+<div class="glass-panel" id="minigameModal">
+    <div style="font-size:0.72rem; color:#7dd3fc; letter-spacing:2px; font-weight:700;">МАЯК ВЕТРОВ • РЕЗОНАНС</div>
+    <h3 style="font-family:'Cinzel',serif; margin:6px 0;" id="minigamePrompt">Запомните мелодию рун...</h3>
+    <div class="rune-row">
+        <button class="rune-btn" data-rune="0">🌬️<span style="font-size:0.65rem;">1</span></button>
+        <button class="rune-btn" data-rune="1">✨<span style="font-size:0.65rem;">2</span></button>
+        <button class="rune-btn" data-rune="2">🔔<span style="font-size:0.65rem;">3</span></button>
+    </div>
+</div>
+
+<!-- Main Menu Modal -->
+<div class="modal-backdrop" id="menuModal">
+    <div class="glass-panel modal-card">
+        <h1 class="game-logo">Море под облаками: Гнездо Шурша 2.0</h1>
+        <p style="text-align:center; color:#cbd5e1; font-size:0.9rem; margin-bottom:20px;">
+            Ультра-обновление: 42 уникальные 2D-модели персонажей (Миры, Аниме, Футболисты), рендер до 8X MSAA, 20 миров и 100 новых игровых функций
+        </p>
+
+        <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+            <button class="glass-btn primary" style="font-size:1rem; padding:12px 24px;" onclick="startGame()">▶ Взлететь в облака</button>
+            <button class="glass-btn" onclick="openModal('skinsModal')">🦸 Ангар: 42 Скина</button>
+            <button class="glass-btn" onclick="openModal('worldsModal')">🗺️ 20 Миров</button>
+            <button class="glass-btn" onclick="openModal('featuresModal')">⚡ Реестр 100 Фич</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap:12px; font-size:0.82rem; color:#e2e8f0;">
+            <div class="glass-panel" style="padding:12px; background:rgba(255,255,255,0.04);">
+                <strong style="color:#fde68a;">🎮 Управление и способности</strong><br>
+                • <b>ЛКМ / Палец / Пробел / W:</b> взмах крыльев.<br>
+                • <b>Shift / ПКМ:</b> пробивной Рывок ветра.<br>
+                • <b>E:</b> замедление времени (Bullet-Time).<br>
+                • <b>Q:</b> воздушная мёртвая петля со сбором нот.
+            </div>
+            <div class="glass-panel" style="padding:12px; background:rgba(255,255,255,0.04);">
+                <strong style="color:#7dd3fc;">🖥️ Графика ЛИНЕЙНАЯ / 2X / 4X / 8X</strong><br>
+                • Нажмите <b>«◫ Сравнить»</b> в верхней панели, чтобы увидеть разделённый экран в реальном времени (как на вашем скриншоте настроек), либо выберите <b>8X + MSAA 8x</b> для максимальной детализации!
+            </div>
+            <div class="glass-panel" style="padding:12px; background:rgba(255,255,255,0.04);">
+                <strong style="color:#34d399;">✦ Тайная звезда Хранителя</strong><br>
+                • Нажмите на звёздочку <b>✦</b> в правом нижнем углу экрана, чтобы моментально открыть все 42 скина (Наруто, Годжо, Аста, Месси, Роналду и др.) и все 20 миров!
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 20 Worlds Modal -->
+<div class="modal-backdrop hidden" id="worldsModal">
+    <div class="glass-panel modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="font-family:'Cinzel',serif; color:#fde68a;">20 Небесных Миров</h2>
+                <p style="font-size:0.8rem; color:#cbd5e1;">Выберите локацию для полёта</p>
+            </div>
+            <button class="glass-btn" onclick="closeModals()">✕ Закрыть</button>
+        </div>
+        <div class="grid-cards" id="worldsGrid"></div>
+    </div>
+</div>
+
+<!-- 42 Skins Wardrobe Modal -->
+<div class="modal-backdrop hidden" id="skinsModal">
+    <div class="glass-panel modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+                <h2 style="font-family:'Cinzel',serif; color:#7dd3fc;">Ангар Скинов и Моделей (42 облика)</h2>
+                <p style="font-size:0.8rem; color:#cbd5e1;">Нот: <strong id="modalNotesCount" style="color:#fde68a;">0</strong> • У каждого скина своя уникальная 2D-модель и VFX-частицы</p>
+            </div>
+            <button class="glass-btn" onclick="closeModals()">✕ Закрыть</button>
+        </div>
+        <div class="cat-tabs" id="skinCategoryTabs">
+            <button class="glass-btn active-pill" data-cat="all">Все (42)</button>
+            <button class="glass-btn" data-cat="mystic">Мистические (22)</button>
+            <button class="glass-btn" data-cat="anime">Аниме: Наруто / JJK / Клевер (10)</button>
+            <button class="glass-btn" data-cat="football">Футболисты (10)</button>
+        </div>
+        <div class="grid-cards" id="skinsGrid"></div>
+    </div>
+</div>
+
+<!-- 100 Features Checklist Modal -->
+<div class="modal-backdrop hidden" id="featuresModal">
+    <div class="glass-panel modal-card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h2 style="font-family:'Cinzel',serif; color:#34d399;">Обновление 2.0: Ровно 100 Новых Функций и Изменений</h2>
+                <p style="font-size:0.8rem; color:#cbd5e1;">Полный реестр реализованных механик, графических фильтров и моделей</p>
+            </div>
+            <button class="glass-btn" onclick="closeModals()">✕ Закрыть</button>
+        </div>
+        <div class="features-list" id="featuresGrid"></div>
+    </div>
+</div>
+
+<script>
+/**
+ * ============================================================================
+ * МОРЕ ПОД ОБЛАКАМИ: ГНЕЗДО ШУРША — ВЕРСИЯ 2.0
+ * 42 индивидуальных 2D-модели скинов, рендер ЛИНЕЙНАЯ/2X/4X/8X, 20 миров, 100 фич
+ * ============================================================================
+ */
+
+// --- 1. 20 НЕБЕСНЫХ МИРОВ ---
+const WORLDS = [
+    { id: 0, name: "Белый Порт", sub: "Утро над облаками • Восходящие бризы", skyTop: "#3b82f6", skyBot: "#fef3c7", cloud: "#ffffff", accent: "#fde68a", harmony: 85, wind: 0.2, hazardRate: 0.3, landmark: "port", story: ["Мира", "«Белый Порт провожает нас тихим звоном такелажа. Лети вперёд, Шурш!»"] },
+    { id: 1, name: "Причалы Облачных Скитальцев", sub: "Парящие пирсы и попутные течения", skyTop: "#2563eb", skyBot: "#bae6fd", cloud: "#f0f9ff", accent: "#38bdf8", harmony: 82, wind: 0.35, hazardRate: 0.4, landmark: "piers", story: ["Скиталец", "«Дальше за причалами ветер поёт древние песни Леи...»"] },
+    { id: 2, name: "Маяк Ветров", sub: "Музыкальные пьедесталы и воздушные потоки", skyTop: "#0284c7", skyBot: "#e0f2fe", cloud: "#ffffff", accent: "#7dd3fc", harmony: 88, wind: 0.5, hazardRate: 0.45, landmark: "lighthouse", story: ["Эхо Леи", "«Коснись музыкальных рун маяка, чтобы открыть путь сквозь встречный шквал.»"] },
+    { id: 3, name: "Каньон Поющих Потоков", sub: "Узкие скальные арки и сильные потоки", skyTop: "#0369a1", skyBot: "#fed7aa", cloud: "#ffedd5", accent: "#fb923c", harmony: 78, wind: 0.65, hazardRate: 0.55, landmark: "canyon", story: ["Мира", "«Слышишь, Шурш? Скалы гудят, словно огромные флейты!»"] },
+    { id: 4, name: "Маяк Садов", sub: "Раскрывающиеся небесные бутоны тепла", skyTop: "#0d9488", skyBot: "#fef08a", cloud: "#ecfdf5", accent: "#34d399", harmony: 92, wind: 0.25, hazardRate: 0.4, landmark: "gardens", story: ["Эхо Леи", "«Мои цветы питаются теплом крыльев. Коснись бутона — и он расцветёт.»"] },
+    { id: 5, name: "Теплицы Леи", sub: "Хрустальные купола и пыльца света", skyTop: "#059669", skyBot: "#d9f99d", cloud: "#f7fee7", accent: "#a3e635", harmony: 95, wind: 0.15, hazardRate: 0.35, landmark: "greenhouse", story: ["Мира", "«Здесь Лея выращивала травы, способные унять боль великих Тихоходов.»"] },
+    { id: 6, name: "Мосты Забытых Ветряков", sub: "Древние лопасти и обломки мостков", skyTop: "#4f46e5", skyBot: "#fde68a", cloud: "#eef2ff", accent: "#c084fc", harmony: 74, wind: 0.55, hazardRate: 0.65, landmark: "windmills", story: ["Хроника", "«Когда ветряки остановились, облачное море начало медленно стынуть.»"] },
+    { id: 7, name: "Остров Архивов", sub: "Парящие свитки памяти и библиотеки", skyTop: "#312e81", skyBot: "#c7d2fe", cloud: "#e0e7ff", accent: "#818cf8", harmony: 80, wind: 0.3, hazardRate: 0.5, landmark: "archive", story: ["Свиток Архива", "«Запись 404: Тихоходы держат на своих спинах саму твердь нашего мира.»"] },
+    { id: 8, name: "Башня Звёздных Карт", sub: "Сумерки астрономов и созвездия", skyTop: "#1e1b4b", skyBot: "#6366f1", cloud: "#c7d2fe", accent: "#fde047", harmony: 84, wind: 0.4, hazardRate: 0.55, landmark: "observatory", story: ["Эхо Леи", "«Смотри на звёзды, Мира: они показывают, где сейчас дрейфует Старейший Тихоход.»"] },
+    { id: 9, name: "Туманный Пролив", sub: "Густая пелена и скрытые воздушные ямы", skyTop: "#334155", skyBot: "#94a3b8", cloud: "#cbd5e1", accent: "#38bdf8", harmony: 62, wind: 0.45, hazardRate: 0.7, landmark: "mist", story: ["Мира", "«Держись ближе, Шурш! В этом тумане легко потерять тепло...»"] },
+    { id: 10, name: "Мёртвая Гавань", sub: "Ржавые остовы небесных кораблей", skyTop: "#1f2937", skyBot: "#78350f", cloud: "#9ca3af", accent: "#f59e0b", harmony: 48, wind: 0.5, hazardRate: 0.8, landmark: "graveyard", story: ["Эхо Капитана", "«Мы пытались покорить шторм без песни маяков... Не повторяй наших ошибок.»"] },
+    { id: 11, name: "Штормовой Фронт", sub: "Холодные вихри и молнии на горизонте", skyTop: "#0f172a", skyBot: "#475569", cloud: "#64748b", accent: "#60a5fa", harmony: 35, wind: 0.85, hazardRate: 0.95, landmark: "storm", story: ["Мира", "«Ветер ревёт от боли Тихохода! Нам нужно прорваться сквозь вихри!»"] },
+    { id: 12, name: "Скрытый Маяк Леи", sub: "Бирюзовое сияние спасения", skyTop: "#0f766e", skyBot: "#5eead4", cloud: "#ccfbf1", accent: "#2dd4bf", harmony: 90, wind: 0.25, hazardRate: 0.4, landmark: "hidden_lighthouse", story: ["Эхо Леи", "«Ты нашла мой тайный причал! Отдохни в бирюзовом свете, прежде чем идти дальше.»"] },
+    { id: 13, name: "Тропа Древних Механизмов", sub: "Вращающиеся кольца и шестерни", skyTop: "#3730a3", skyBot: "#fbbf24", cloud: "#fef3c7", accent: "#f59e0b", harmony: 72, wind: 0.45, hazardRate: 0.75, landmark: "gears", story: ["Механизм", "«Пролетай сквозь золотые кольца резонанса, чтобы пробудить древний мост!»"] },
+    { id: 14, name: "Спина Великого Тихохода", sub: "Живой ландшафт и мерное дыхание гиганта", skyTop: "#1e3a8a", skyBot: "#93c5fd", cloud: "#dbeafe", accent: "#60a5fa", harmony: 65, wind: 0.4, hazardRate: 0.65, landmark: "tardigrade", story: ["Мира", "«Невероятно... Эти холмы под нами — спина живого Великого Тихохода!»"] },
+    { id: 15, name: "Глубокий Сон Тихоходов", sub: "Медленные волны сновидений и светящиеся споры", skyTop: "#172554", skyBot: "#4338ca", cloud: "#a5b4fc", accent: "#c084fc", harmony: 76, wind: 0.3, hazardRate: 0.6, landmark: "dream", story: ["Голос Глубин", "«Мы спим тысячу лет, но холод всё глубже проникает под панцирь...»"] },
+    { id: 16, name: "Разлом Холода и Боли", sub: "Ледяные осколки и тревожный багрянец", skyTop: "#1e1b4b", skyBot: "#9f1239", cloud: "#fecdd3", accent: "#fb7185", harmony: 25, wind: 0.9, hazardRate: 1.0, landmark: "rift", story: ["Мира", "«Держись, Шурш! Ещё немного — и мы доберёмся до самого сердца!»"] },
+    { id: 17, name: "Колыбель Облачных Китов", sub: "Небесные киты и северное сияние", skyTop: "#064e3b", skyBot: "#38bdf8", cloud: "#e0f2fe", accent: "#34d399", harmony: 88, wind: 0.3, hazardRate: 0.5, landmark: "whales", story: ["Эхо Леи", "«Облачные киты поют колыбельную, помогая унять дрожь земли.»"] },
+    { id: 18, name: "Преддверие Сердца", sub: "Золотые врата и резонанс всех маяков", skyTop: "#78350f", skyBot: "#fde68a", cloud: "#fef9c3", accent: "#fbbf24", harmony: 94, wind: 0.35, hazardRate: 0.55, landmark: "gate", story: ["Мира", "«Все огни соединяются в один луч. Сердечный Маяк прямо перед нами!»"] },
+    { id: 19, name: "Сердечный Маяк", sub: "Финал • Золотое сияние и вечный покой", skyTop: "#b45309", skyBot: "#fef08a", cloud: "#ffffff", accent: "#ffffff", harmony: 100, wind: 0.2, hazardRate: 0.3, landmark: "heart", story: ["Лея и Мира", "«Тихоходы снова дышат ровно. Спасибо тебе, Шурш — маленький хранитель большого неба.»"] }
+];
+
+// --- 2. 42 УНИКАЛЬНЫХ СКИНА С РАЗНЫМИ 2D-МОДЕЛЬКАМИ И VFX ---
+const SKINS = [
+    // 22 Мистических / Атмосферных
+    { id: "shursh", cat: "mystic", name: "Шурш-Птенец", cost: 0, model: "bird", primary: "#ffffff", secondary: "#bae6fd", glow: "#7dd3fc", vfx: "feathers", desc: "Классический пушистый дух облаков с мягкими перьями." },
+    { id: "origami", cat: "mystic", name: "Бумажный Журавлик", cost: 20, model: "origami", primary: "#fef3c7", secondary: "#f59e0b", glow: "#fde047", vfx: "paper", desc: "Острые гранёные полигональные крылья оригами и бумажные самолётики." },
+    { id: "automaton", cat: "mystic", name: "Автоматон Архивов", cost: 35, model: "mech", primary: "#d97706", secondary: "#78350f", glow: "#fbbf24", vfx: "gears", desc: "Бронзовый часовой механизм с заводным ключом и шестернями." },
+    { id: "phoenix", cat: "mystic", name: "Хрустальный Феникс", cost: 50, model: "phoenix", primary: "#38bdf8", secondary: "#e0f2fe", glow: "#f472b6", vfx: "prism", desc: "Прозрачные грани с радужным преломлением света." },
+    { id: "kodama", cat: "mystic", name: "Лесной Дух Кодама", cost: 65, model: "kodama", primary: "#ecfdf5", secondary: "#10b981", glow: "#34d399", vfx: "fireflies", desc: "Маска леса с веточками листвы и изумрудными светлячками." },
+    { id: "captain", cat: "mystic", name: "Капитан Белого Порта", cost: 80, model: "captain", primary: "#1e3a8a", secondary: "#fbbf24", glow: "#93c5fd", vfx: "foam", desc: "Капитанская треуголка, развевающийся шарф и морская пена." },
+    { id: "whale", cat: "mystic", name: "Звёздный Кит-Малыш", cost: 95, model: "whale", primary: "#312e81", secondary: "#818cf8", glow: "#fde047", vfx: "stars", desc: "Небесный китёнок с плавниками и шлейфом созвездий." },
+    { id: "ghost", cat: "mystic", name: "Призрак Гавани", cost: 110, model: "ghost", primary: "#94a3b8", secondary: "#334155", glow: "#2dd4bf", vfx: "ectoplasm", desc: "Рваный призрачный плащ и холодная бирюзовая эктоплазма." },
+    { id: "seraph", cat: "mystic", name: "Солнечный Серафим", cost: 130, model: "seraph", primary: "#fffbeb", secondary: "#f59e0b", glow: "#fde047", vfx: "halo", desc: "Шестикрылая модель с сияющим нимбом и лучами света." },
+    { id: "owl", cat: "mystic", name: "Ночной Совёнок", cost: 145, model: "owl", primary: "#475569", secondary: "#cbd5e1", glow: "#fde047", vfx: "crescent", desc: "Большие мудрые глаза, ушки-перья и полумесяцы в шлейфе." },
+    { id: "dragon", cat: "mystic", name: "Облачный Дракончик", cost: 160, model: "dragon", primary: "#0284c7", secondary: "#7dd3fc", glow: "#38bdf8", vfx: "blueflame", desc: "Рожки, перепончатые крылья и синее драконье пламя." },
+    { id: "drone", cat: "mystic", name: "Робот-Дрон Леи", cost: 175, model: "drone", primary: "#e2e8f0", secondary: "#0ea5e9", glow: "#38bdf8", vfx: "pixels", desc: "Сферический дрон с антенной, визором и цифровыми пикселями." },
+    { id: "fairy", cat: "mystic", name: "Цветочная Фея Садов", cost: 190, model: "fairy", primary: "#fbcfe8", secondary: "#f472b6", glow: "#34d399", vfx: "petals", desc: "Крылья бабочки, венок из роз и розовая пыльца." },
+    { id: "griffin", cat: "mystic", name: "Грозовой Грифон", cost: 210, model: "griffin", primary: "#b45309", secondary: "#fef3c7", glow: "#facc15", vfx: "lightning", desc: "Орлиный клюв, львиный хвост и разряды молний." },
+    { id: "snowleopard", cat: "mystic", name: "Снежный Барс Небес", cost: 225, model: "cat", primary: "#f8fafc", secondary: "#94a3b8", glow: "#bae6fd", vfx: "snow", desc: "Пушистый длинный хвост, кошачьи ушки и снежинки." },
+    { id: "alchemist", cat: "mystic", name: "Алхимик Ртути", cost: 240, model: "wizard", primary: "#581c87", secondary: "#c084fc", glow: "#e879f9", vfx: "runes", desc: "Остроконечная шляпа звездочёта и фиолетовые руны." },
+    { id: "samurai", cat: "mystic", name: "Самурай Ветра", cost: 260, model: "samurai", primary: "#991b1b", secondary: "#1e293b", glow: "#fda4af", vfx: "sakura", desc: "Шлем кабуто, катана за спиной и лепестки сакуры." },
+    { id: "cyber", cat: "mystic", name: "Кибер-Неон Сёрфер", cost: 280, model: "cyber", primary: "#0f172a", secondary: "#06b6d4", glow: "#f43f5e", vfx: "neon", desc: "Неоновый ховерборд под ногами и кибер-очки." },
+    { id: "astronaut", cat: "mystic", name: "Звёздный Астронавт", cost: 300, model: "astro", primary: "#ffffff", secondary: "#f97316", glow: "#38bdf8", vfx: "stars", desc: "Скафандр со стеклянным визором и реактивным ранцем." },
+    { id: "minitardi", cat: "mystic", name: "Тихоход-Малютка", cost: 320, model: "tardigrade", primary: "#3b82f6", secondary: "#1d4ed8", glow: "#93c5fd", vfx: "aurora", desc: "Мини-версия Великого Тихохода с маяком на панцире!" },
+    { id: "raven", cat: "mystic", name: "Теневой Ворон Бездны", cost: 340, model: "raven", primary: "#090d16", secondary: "#475569", glow: "#ef4444", vfx: "darkfeathers", desc: "Чёрные острые перья, алые глаза и тёмный шлейф." },
+    { id: "crystalheart", cat: "mystic", name: "Сердце Небес", cost: 360, model: "heart", primary: "#fb7185", secondary: "#fde047", glow: "#ffffff", vfx: "heart", desc: "Парящий рубиновый кристалл в золотой оправе." },
+
+    // 10 АНИМЕ-СКИНОВ (Наруто, Магическая битва, Чёрный клевер)
+    { id: "naruto", cat: "anime", name: "Наруто Узумаки", cost: 400, model: "anime_naruto", primary: "#f97316", secondary: "#1e293b", glow: "#fde047", vfx: "rasengan", desc: "Наруто: жёлтые колючие волосы, повязка Конохи, куртка и сферы Расенган!" },
+    { id: "sasuke", cat: "anime", name: "Саске Учиха", cost: 400, model: "anime_sasuke", primary: "#1e3a8a", secondary: "#cbd5e1", glow: "#a855f7", vfx: "chidori", desc: "Наруто: чёрные волосы, высокий воротник, Шаринган и фиолетовый Чидори!" },
+    { id: "itachi", cat: "anime", name: "Итачи Учиха", cost: 420, model: "anime_itachi", primary: "#0f172a", secondary: "#ef4444", glow: "#dc2626", vfx: "crows", desc: "Наруто: плащ Акацуки с красными облаками и стая чёрных ворон." },
+    { id: "kakashi", cat: "anime", name: "Какаши Хатаке", cost: 420, model: "anime_kakashi", primary: "#1e293b", secondary: "#e2e8f0", glow: "#38bdf8", vfx: "chidori", desc: "Наруто: седые волосы, маска, повязка на глаз и синие молнии Райкири." },
+    { id: "gojo", cat: "anime", name: "Сатору Годжо", cost: 450, model: "anime_gojo", primary: "#0f172a", secondary: "#ffffff", glow: "#818cf8", vfx: "hollowpurple", desc: "Магическая битва: белые волосы, чёрная повязка на глазах и аура Бесконечности!" },
+    { id: "yuji", cat: "anime", name: "Юдзи Итадори", cost: 430, model: "anime_yuji", primary: "#1e1b4b", secondary: "#f43f5e", glow: "#ef4444", vfx: "blackflash", desc: "Магическая битва: розово-чёрные волосы, красный капюшон и Чёрная Молния!" },
+    { id: "megumi", cat: "anime", name: "Мегуми Фушигуро", cost: 430, model: "anime_megumi", primary: "#0f172a", secondary: "#334155", glow: "#38bdf8", vfx: "shadows", desc: "Магическая битва: колючие тёмные волосы и чернильные тени шикигами." },
+    { id: "sukuna", cat: "anime", name: "Двуликий Сукуна", cost: 480, model: "anime_sukuna", primary: "#f8fafc", secondary: "#be123c", glow: "#f43f5e", vfx: "slashes", desc: "Магическая битва: метки Короля Проклятий, кимоно и алые разрезы Рассечения!" },
+    { id: "asta", cat: "anime", name: "Аста (Чёрный Клевер)", cost: 450, model: "anime_asta", primary: "#090d16", secondary: "#e2e8f0", glow: "#ef4444", vfx: "antimagic", desc: "Чёрный Клевер: повязка Чёрного Быка, гигантский чёрный меч и антимагия!" },
+    { id: "yuno", cat: "anime", name: "Юно Гринбеллиор", cost: 450, model: "anime_yuno", primary: "#064e3b", secondary: "#fde047", glow: "#34d399", vfx: "windclover", desc: "Чёрный Клевер: форма Золотого Рассвета, 4-листный гримуар и вихри ветра!" },
+
+    // 10 РЕАЛЬНЫХ ФУТБОЛИСТОВ
+    { id: "messi", cat: "football", name: "Лионель Месси (#10)", cost: 500, model: "fb_messi", primary: "#38bdf8", secondary: "#ffffff", glow: "#fde047", vfx: "goldball", desc: "Бело-голубая форма #10, борода, Кубок мира и золотые мячи!" },
+    { id: "ronaldo", cat: "football", name: "Криштиану Роналду (#7)", cost: 500, model: "fb_ronaldo", primary: "#dc2626", secondary: "#15803d", glow: "#fbbf24", vfx: "siuuu", desc: "Форма #7, фирменная укладка и огненные вспышки SIUUU!" },
+    { id: "neymar", cat: "football", name: "Неймар Мл. (#10)", cost: 480, model: "fb_neymar", primary: "#facc15", secondary: "#16a34a", glow: "#4ade80", vfx: "samba", desc: "Жёлто-зелёная бразильская форма #10 и радужные финты." },
+    { id: "mbappe", cat: "football", name: "Килиан Мбаппе (#9)", cost: 490, model: "fb_mbappe", primary: "#1d4ed8", secondary: "#ffffff", glow: "#ef4444", vfx: "sonic", desc: "Синяя форма #9, сверхзвуковой след и триколор-молнии." },
+    { id: "haaland", cat: "football", name: "Эрлинг Холанд (#9)", cost: 490, model: "fb_haaland", primary: "#7dd3fc", secondary: "#ffffff", glow: "#38bdf8", vfx: "ice", desc: "Голубая форма #9, светлый хвост викинга и ледяные искры." },
+    { id: "bellingham", cat: "football", name: "Джуд Беллингем (#5)", cost: 480, model: "fb_bellingham", primary: "#ffffff", secondary: "#fbbf24", glow: "#fde047", vfx: "crowns", desc: "Королевская белая форма #5, раскинутые руки и золотые короны." },
+    { id: "vinicius", cat: "football", name: "Винисиус Жуниор (#7)", cost: 480, model: "fb_vinicius", primary: "#ffffff", secondary: "#f59e0b", glow: "#fbbf24", vfx: "samba", desc: "Бело-золотая форма #7 и искры бразильского дриблинга." },
+    { id: "yamal", cat: "football", name: "Ламин Ямаль (#19)", cost: 470, model: "fb_yamal", primary: "#1e3a8a", secondary: "#b91c1c", glow: "#fde047", vfx: "lightning", desc: "Сине-гранатовая форма #19, кудри вундеркинда и молнии." },
+    { id: "salah", cat: "football", name: "Мохамед Салах (#11)", cost: 470, model: "fb_salah", primary: "#dc2626", secondary: "#ffffff", glow: "#f59e0b", vfx: "goldball", desc: "Красная форма #11, кудри, борода и золотой след Фараона." },
+    { id: "debruyne", cat: "football", name: "Кевин Де Брёйне (#17)", cost: 470, model: "fb_debruyne", primary: "#38bdf8", secondary: "#ffffff", glow: "#fde047", vfx: "passlines", desc: "Голубая форма #17, рыжая причёска и траектории идеальных пасов." }
+];
+
+// --- 3. СПИСОК 100 НОВЫХ ФУНКЦИЙ И ИЗМЕНЕНИЙ ---
+const FEATURES_100 = [
+    "1. Переключатель рендера ЛИНЕЙНАЯ (1x) с базовой фильтрацией",
+    "2. Режим рендера 2X с повышенной плотностью пикселей",
+    "3. Режим рендера 4X с чёткими контурами и микротекстурами",
+    "4. Режим рендера 8X с максимальным суперсэмплингом и свечением",
+    "5. Интерактивный Split-Screen экран сравнения (ЛИНЕЙНАЯ | 2X | 4X | 8X)",
+    "6. Переключатель сглаживания NO AA (жёсткий пиксельный край)",
+    "7. Переключатель сглаживания FXAA (быстрое сглаживание)",
+    "8. Переключатель сглаживания MSAA 4x",
+    "9. Переключатель сглаживания MSAA 8x (ультра-гладкость)",
+    "10. Счётчик FPS и активного множителя рендера в реальном времени",
+    "11. Динамические объёмные лучи света (God Rays) на 4X/8X",
+    "12. Микротекстура облаков и травы на панцире Тихохода при 4X/8X",
+    "13. 22 оригинальные 2D-модели мистических существ (не просто перекраска)",
+    "14. Модель Бумажного Журавлика Оригами со складками",
+    "15. Модель Механического Автоматона с вращающейся шестернёй",
+    "16. Модель Хрустального Феникса с радужным преломлением",
+    "17. Модель Лесного Духа Кодама с веточками листвы",
+    "18. Модель Капитана Белого Порта в треуголке и шарфе",
+    "19. Модель Звёздного Кита-Малыша с плавниками",
+    "20. Модель Призрака Мёртвой Гавани с рваным плащом",
+    "21. Шестикрылая модель Солнечного Серафима с нимбом",
+    "22. Модель Ночного Совёнка-Хранителя с ушками-перьями",
+    "23. Модель Облачного Дракончика с рожками и крыльями",
+    "24. Модель Робота-Дрона Леи с антенной и визором",
+    "25. Модель Цветочной Феи Садов с крыльями бабочки",
+    "26. Модель Грозового Грифона с орлиным клювом",
+    "27. Модель Снежного Барса с длинным пушистым хвостом",
+    "28. Модель Алхимика Ртути в остроконечной шляпе",
+    "29. Модель Самурая Ветра в шлеме кабуто и с катаной",
+    "30. Модель Кибер-Неон Сёрфера на светящемся ховерборде",
+    "31. Модель Космического Астронавта в скафандре",
+    "32. Модель Тихохода-Малютки с маяком на спине",
+    "33. Модель Теневого Ворона Бездны с алыми глазами",
+    "34. Модель Сердца Небес в золотой оправе",
+    "35. Эксклюзивный скин Наруто Узумаки с повязкой Конохи и Расенганом",
+    "36. Эксклюзивный скин Саске Учиха с Шаринганом и Чидори",
+    "37. Эксклюзивный скин Итачи Учиха в плаще Акацуки со стаей ворон",
+    "38. Эксклюзивный скин Какаши Хатаке с маской и Райкири",
+    "39. Эксклюзивный скин Сатору Годжо с повязкой и Фиолетовой Пустотой",
+    "40. Эксклюзивный скин Юдзи Итадори с Чёрной Молнией",
+    "41. Эксклюзивный скин Мегуми Фушигуро с теневыми шикигами",
+    "42. Эксклюзивный скин Сукуны с метками Проклятий и разрезами",
+    "43. Эксклюзивный скин Асты с гигантским чёрным мечом антимагии",
+    "44. Эксклюзивный скин Юно с 4-листным клевером и магией ветра",
+    "45. Реальный футболист Лионель Месси (#10) с Кубком и золотыми мячами",
+    "46. Реальный футболист Криштиану Роналду (#7) с эффектом SIUUU",
+    "47. Реальный футболист Неймар Мл. (#10) в бразильской форме",
+    "48. Реальный футболист Килиан Мбаппе (#9) со сверхзвуковым следом",
+    "49. Реальный футболист Эрлинг Холанд (#9) с причёской викинга",
+    "50. Реальный футболист Джуд Беллингем (#5) в победной стойке",
+    "51. Реальный футболист Винисиус Жуниор (#7) со шлейфом самбы",
+    "52. Реальный футболист Ламин Ямаль (#19) в сине-гранатовой форме",
+    "53. Реальный футболист Мохамед Салах (#11) со следом Фараона",
+    "54. Реальный футболист Кевин Де Брёйне (#17) с линиями пасов",
+    "55. Фильтрация ангара скинов по категориям (Все / Мистические / Аниме / Футболисты)",
+    "56. Индивидуальные VFX-частицы Расенгана и Чидори в полёте",
+    "57. Индивидуальные VFX-частицы чёрных ворон Итачи и разрезов Сукуны",
+    "58. Индивидуальные VFX-частицы футбольных мячей и золотых корон",
+    "59. Система комбо-множителя (x1 до x10) за серию собранных нот",
+    "60. Механика Near-Miss (уворот впритирку от вихря) с бонусом +5 нот",
+    "61. Пробивной Рывок (Dash-Smash), разрушающий препятствия на пути",
+    "62. Способность замедления времени Bullet-Time [клавиша E]",
+    "63. Способность Воздушной Мёртвой Петли [клавиша Q] с импульсом",
+    "64. Бонус Магнита Нот, притягивающий ноты по дуге к герою",
+    "65. Порталы небесного телепорта, переносящие вперёд по миру",
+    "66. Сундуки с древними реликвиями Леи (+15 нот и щит)",
+    "67. Радужные кольца ускорения с музыкальным аккордом",
+    "68. Звёздные метеоритные дожди в ночных и космических мирах",
+    "69. Динамическая тряска камеры (Screen Shake) при рывке и ударах",
+    "70. Живая система ежедневных заданий в левом верхнем углу HUD",
+    "71. Автоматическая выдача нового квеста после выполнения текущего",
+    "72. 20 уникальных небесных миров с плавной сменой палитры неба",
+    "73. Дышащий силуэт Великого Тихохода на горизонте каждого мира",
+    "74. Реакция цвета неба и тумана на уровень покоя/боли Тихоходов",
+    "75. Музыкальные пьедесталы Маяка Ветров с мини-игрой на 3 руны",
+    "76. Раскрывающиеся бутоны Маяка Садов, восполняющие Тепло",
+    "77. Парящие свитки Острова Архивов с сюжетными записями",
+    "78. Вращающиеся золотые кольца Тропы Древних Механизмов",
+    "79. Холодные штормовые вихри с вращающейся анимацией",
+    "80. Обломки древних небесных мостков",
+    "81. Воздушные ямы, затягивающие крылья вниз",
+    "82. Мягкая система спасения при нулевом Тепле без обрыва полёта",
+    "83. Встроенный Web Audio API синтезатор с 10 разными треками",
+    "84. Ручное переключение треков и регулировка громкости в HUD",
+    "85. Процедурные звуковые эффекты взмахов, нот, рун и бутонов",
+    "86. Автосохранение прогресса, нот, миров и скинов в localStorage",
+    "87. Секретная админ-кнопка (✦), открывающая все 42 скина и 20 миров",
+    "88. Пополнение баланса на +5000 нот при нажатии админ-кнопки",
+    "89. Инерционная физика полёта с волновым ветром",
+    "90. Энергетический щит вокруг персонажа с визуальным контуром",
+    "91. Адаптивное управление мышью, касанием экрана и клавиатурой",
+    "92. Горячие клавиши 1-2-3 для быстрого прохождения рун маяка",
+    "93. Анимированные стаи фоновых птиц на дальнем плане",
+    "94. Многослойный параллакс облаков (3 слоя глубины)",
+    "95. Плавный наклон модели персонажа по вектору вертикальной скорости",
+    "96. Визуальная индикация перезарядки Рывка и энергии Замедления",
+    "97. Сюжетные эхо-диалоги Миры, Леи и Хроник при смене миров",
+    "98. Быстрый переход к любому из 20 миров через интерактивную карту",
+    "99. Оптимизированный рендер-цикл с защитой от просадок кадров",
+    "100. Полный интерактивный реестр всех 100 нововведений в меню игры"
+];
+
+// --- 4. 10 ПРОЦЕДУРНЫХ ТРЕКОВ WEB AUDIO API ---
+const TRACKS = [
+    { name: "1. Утро Белого Порта", tempo: 110, scale: [261.63, 293.66, 329.63, 392.00, 440.00, 523.25], wave: "sine", padFreq: 130.81 },
+    { name: "2. Песнь Маяка Ветров", tempo: 124, scale: [293.66, 329.63, 392.00, 440.00, 493.88, 587.33], wave: "triangle", padFreq: 146.83 },
+    { name: "3. Шёпот Садов Леи", tempo: 96, scale: [349.23, 392.00, 440.00, 523.25, 587.33, 698.46], wave: "sine", padFreq: 174.61 },
+    { name: "4. Пыль Архивов", tempo: 88, scale: [220.00, 261.63, 293.66, 329.63, 392.00, 440.00], wave: "triangle", padFreq: 110.00 },
+    { name: "5. Эхо Мёртвой Гавани", tempo: 76, scale: [196.00, 233.08, 261.63, 293.66, 349.23, 392.00], wave: "sine", padFreq: 98.00 },
+    { name: "6. Скрытый Свет", tempo: 104, scale: [329.63, 392.00, 440.00, 493.88, 587.33, 659.25], wave: "sine", padFreq: 164.81 },
+    { name: "7. Дыхание Тихохода", tempo: 68, scale: [174.61, 220.00, 261.63, 329.63, 392.00, 440.00], wave: "triangle", padFreq: 87.31 },
+    { name: "8. Штормовой Пульс", tempo: 138, scale: [246.94, 293.66, 329.63, 369.99, 440.00, 493.88], wave: "sawtooth", padFreq: 123.47 },
+    { name: "9. Звёздная Колыбельная", tempo: 84, scale: [392.00, 440.00, 493.88, 587.33, 659.25, 783.99], wave: "sine", padFreq: 196.00 },
+    { name: "10. Сердечный Маяк", tempo: 116, scale: [261.63, 329.63, 392.00, 493.88, 523.25, 659.25], wave: "triangle", padFreq: 130.81 }
+];
+
+// --- 5. СОСТОЯНИЕ ИГРЫ И НАСТРОЙКИ РЕНДЕРА ---
+const state = {
+    playing: false,
+    paused: false,
+    worldIdx: 0,
+    unlockedWorlds: 1,
+    notes: 30,
+    unlockedSkins: ["shursh"],
+    currentSkin: "shursh",
+    skinFilter: "all",
+    adminUnlocked: false,
+    distance: 0,
+    worldProgress: 0,
+    worldLength: 2600,
+    warmth: 100,
+    harmony: 85,
+    shield: false,
+    magnetTimer: 0,
+    combo: 1,
+    comboTimer: 0,
+    dashCooldown: 0,
+    dashTimer: 0,
+    slowMoEnergy: 100,
+    slowMoActive: false,
+    loopTimer: 0,
+    screenShake: 0,
+    holdingFly: false,
+    time: 0,
+    lastStoryWorld: -1,
+    // Графика
+    renderScale: 8,       // 1 (Линейная), 2, 4, 8
+    aaMode: "MSAA 8x",    // NO AA, FXAA, MSAA 4x, MSAA 8x
+    splitCompare: false,  // Сравнение всех 4 режимов на экране
+    // Квесты
+    quest: { type: "notes", target: 15, progress: 0, reward: 25, label: "Соберите 15 небесных нот" }
+};
+
+try {
+    const saved = JSON.parse(localStorage.getItem("shursh_v2_save"));
+    if (saved) {
+        Object.assign(state, {
+            unlockedWorlds: saved.unlockedWorlds || 1,
+            notes: saved.notes ?? 30,
+            unlockedSkins: saved.unlockedSkins || ["shursh"],
+            currentSkin: saved.currentSkin || "shursh",
+            adminUnlocked: !!saved.adminUnlocked
+        });
+    }
+} catch (e) {}
+
+function saveProgress() {
+    try {
+        localStorage.setItem("shursh_v2_save", JSON.stringify({
+            unlockedWorlds: state.unlockedWorlds,
+            notes: state.notes,
+            unlockedSkins: state.unlockedSkins,
+            currentSkin: state.currentSkin,
+            adminUnlocked: state.adminUnlocked
+        }));
+    } catch (e) {}
+}
+
+// --- 6. WEB AUDIO API СИНТЕЗАТОР ---
+class SoundEngine {
+    constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.isPlayingMusic = false;
+        this.trackIdx = 0;
+        this.volume = 0.45;
+        this.stepTimer = null;
+        this.stepCount = 0;
+        this.padOsc = null;
+    }
+    init() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+            this.masterGain = this.ctx.createGain();
+            this.masterGain.gain.value = this.volume;
+            this.masterGain.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === "suspended") this.ctx.resume();
+    }
+    setVolume(val) {
+        this.volume = parseFloat(val);
+        if (this.masterGain) this.masterGain.gain.setTargetAtTime(this.volume, this.ctx.currentTime, 0.05);
+    }
+    startMusic() {
+        this.init();
+        if (this.isPlayingMusic) return;
+        this.isPlayingMusic = true;
+        document.getElementById("playPauseBtn").textContent = "⏸";
+        this.scheduleTrack();
+    }
+    stopMusic() {
+        this.isPlayingMusic = false;
+        document.getElementById("playPauseBtn").textContent = "▶";
+        clearInterval(this.stepTimer);
+        if (this.padOsc) { try { this.padOsc.stop(); } catch (e) {} this.padOsc = null; }
+    }
+    toggleMusic() { this.isPlayingMusic ? this.stopMusic() : this.startMusic(); }
+    changeTrack(dir) {
+        this.trackIdx = (this.trackIdx + dir + TRACKS.length) % TRACKS.length;
+        this.updateTrackUI();
+        if (this.isPlayingMusic) {
+            clearInterval(this.stepTimer);
+            if (this.padOsc) { try { this.padOsc.stop(); } catch (e) {} }
+            this.scheduleTrack();
+        }
+    }
+    updateTrackUI() {
+        const t = TRACKS[this.trackIdx];
+        document.getElementById("trackName").textContent = t.name;
+        document.getElementById("trackIndexBadge").textContent = `${this.trackIdx + 1}/${TRACKS.length}`;
+    }
+    scheduleTrack() {
+        const track = TRACKS[this.trackIdx];
+        this.updateTrackUI();
+        const osc = this.ctx.createOscillator();
+        const padGain = this.ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = track.padFreq;
+        padGain.gain.value = 0.07;
+        osc.connect(padGain); padGain.connect(this.masterGain);
+        osc.start();
+        this.padOsc = osc;
+
+        const intervalMs = (60 / track.tempo) * 500;
+        this.stepCount = 0;
+        this.stepTimer = setInterval(() => {
+            if (!this.isPlayingMusic || !this.ctx) return;
+            const now = this.ctx.currentTime;
+            const noteFreq = track.scale[(this.stepCount * 3 + Math.floor(Math.sin(this.stepCount) * 2 + 2)) % track.scale.length];
+            const nOsc = this.ctx.createOscillator();
+            const nGain = this.ctx.createGain();
+            nOsc.type = track.wave;
+            nOsc.frequency.setValueAtTime(noteFreq, now);
+            nGain.gain.setValueAtTime(0.001, now);
+            nGain.gain.exponentialRampToValueAtTime(track.wave === "sawtooth" ? 0.04 : 0.1, now + 0.06);
+            nGain.gain.exponentialRampToValueAtTime(0.0008, now + 0.85);
+            nOsc.connect(nGain); nGain.connect(this.masterGain);
+            nOsc.start(now); nOsc.stop(now + 0.9);
+            this.stepCount++;
+        }, intervalMs);
+    }
+    playSFX(type) {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        if (type === "flap") {
+            osc.type = "sine"; osc.frequency.setValueAtTime(220, now); osc.frequency.exponentialRampToValueAtTime(360, now + 0.12);
+            gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+        } else if (type === "note") {
+            osc.type = "triangle"; osc.frequency.setValueAtTime(587.33 + state.combo * 35, now);
+            gain.gain.setValueAtTime(0.13, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        } else if (type === "bloom") {
+            osc.type = "sine"; osc.frequency.setValueAtTime(440, now); osc.frequency.exponentialRampToValueAtTime(880, now + 0.35);
+            gain.gain.setValueAtTime(0.14, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        } else if (type === "hurt") {
+            osc.type = "sawtooth"; osc.frequency.setValueAtTime(160, now); osc.frequency.linearRampToValueAtTime(80, now + 0.25);
+            gain.gain.setValueAtTime(0.14, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        } else {
+            const freqs = [523.25, 659.25, 783.99];
+            osc.type = "sine"; osc.frequency.setValueAtTime(freqs[Math.floor(Math.random() * 3)], now);
+            gain.gain.setValueAtTime(0.16, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        }
+        osc.connect(gain); gain.connect(this.masterGain);
+        osc.start(now); osc.stop(now + 0.4);
+    }
+}
+const audio = new SoundEngine();
+
+// --- 7. CANVAS, РЕНДЕР-МАСШТАБИРОВАНИЕ И СУЩНОСТИ ---
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+let W = window.innerWidth;
+let H = window.innerHeight;
+
+function applyRenderResolution() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    // Реальное изменение разрешения буфера в зависимости от ЛИНЕЙНАЯ (1) / 2X / 4X / 8X
+    const scaleFactor = state.renderScale === 1 ? 0.65 : (state.renderScale === 2 ? 1.0 : (state.renderScale === 4 ? 1.45 : 1.9));
+    canvas.width = Math.floor(W * scaleFactor);
+    canvas.height = Math.floor(H * scaleFactor);
+    ctx.setTransform(scaleFactor, 0, 0, scaleFactor, 0, 0);
+    ctx.imageSmoothingEnabled = state.aaMode !== "NO AA";
+    ctx.imageSmoothingQuality = state.aaMode === "MSAA 8x" ? "high" : (state.aaMode === "MSAA 4x" ? "medium" : "low");
+}
+window.addEventListener("resize", applyRenderResolution);
+applyRenderResolution();
+
+const player = { x: W * 0.24, y: H * 0.45, vy: 0, wingAngle: 0 };
+let particles = [];
+let collectibles = [];
+let interactives = [];
+let hazards = [];
+let clouds = [];
+let bgBirds = [];
+
+for (let i = 0; i < 18; i++) {
+    clouds.push({ x: Math.random() * W, y: Math.random() * H, w: 110 + Math.random() * 180, h: 34 + Math.random() * 44, speed: 0.3 + Math.random() * 0.9, layer: i % 3 });
+}
+for (let i = 0; i < 8; i++) {
+    bgBirds.push({ x: Math.random() * W, y: 60 + Math.random() * (H * 0.5), speed: 1.1 + Math.random() * 0.8, phase: Math.random() * 6 });
+}
+
+// --- 8. СИСТЕМА КВЕСТОВ И ТОСТОВ ---
+let toastTimeout = null;
+function showStoryToast(speaker, text) {
+    const toast = document.getElementById("storyToast");
+    document.getElementById("storySpeaker").textContent = speaker;
+    document.getElementById("storyText").textContent = text;
+    toast.classList.add("visible");
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toast.classList.remove("visible"), 4500);
+}
+
+function advanceQuest(type, amount = 1) {
+    if (state.quest.type !== type) return;
+    state.quest.progress += amount;
+    if (state.quest.progress >= state.quest.target) {
+        state.notes += state.quest.reward;
+        audio.playSFX("bloom");
+        showStoryToast("Задание выполнено!", `Награда получена: +${state.quest.reward} небесных нот!`);
+        const pool = [
+            { type: "notes", target: 20, reward: 30, label: "Соберите 20 небесных нот" },
+            { type: "nearmiss", target: 4, reward: 35, label: "Совершите 4 уворота впритирку от вихрей" },
+            { type: "dash", target: 5, reward: 25, label: "Используйте Рывок ветра 5 раз" },
+            { type: "interact", target: 3, reward: 40, label: "Активируйте 3 маяка, бутона или портала" }
+        ];
+        const next = pool[Math.floor(Math.random() * pool.length)];
+        state.quest = { ...next, progress: 0 };
+        saveProgress();
+    }
+    document.getElementById("questText").textContent = `${state.quest.label} (${state.quest.progress}/${state.quest.target})`;
+}
+
+// --- 9. МУЗЫКАЛЬНЫЙ ПЬЕДЕСТАЛ (МИНИ-ИГРА) ---
+const minigame = { active: false, sequence: [], playerSeq: [], acceptingInput: false };
+function triggerPedestalMinigame() {
+    if (minigame.active) return;
+    minigame.active = true;
+    state.paused = true;
+    minigame.sequence = [0, 1, 2].sort(() => Math.random() - 0.5);
+    minigame.playerSeq = [];
+    minigame.acceptingInput = false;
+    const modal = document.getElementById("minigameModal");
+    const prompt = document.getElementById("minigamePrompt");
+    const btns = document.querySelectorAll(".rune-btn");
+    prompt.textContent = "Запомните мелодию рун...";
+    modal.classList.add("active");
+
+    minigame.sequence.forEach((runeIdx, step) => {
+        setTimeout(() => {
+            btns[runeIdx].classList.add("lit");
+            audio.playSFX("rune");
+            setTimeout(() => btns[runeIdx].classList.remove("lit"), 350);
+            if (step === minigame.sequence.length - 1) {
+                setTimeout(() => {
+                    minigame.acceptingInput = true;
+                    prompt.textContent = "Повторите руны (клик или клавиши 1, 2, 3)!";
+                }, 400);
+            }
+        }, (step + 1) * 600);
+    });
+}
+function handleRunePress(idx) {
+    if (!minigame.active || !minigame.acceptingInput) return;
+    const btns = document.querySelectorAll(".rune-btn");
+    btns[idx].classList.add("lit");
+    audio.playSFX("rune");
+    setTimeout(() => btns[idx].classList.remove("lit"), 200);
+    minigame.playerSeq.push(idx);
+    const cur = minigame.playerSeq.length - 1;
+    if (minigame.playerSeq[cur] !== minigame.sequence[cur]) {
+        document.getElementById("minigamePrompt").textContent = "Поток сбился, но маяк согрел вас (+15 Тепла)!";
+        state.warmth = Math.min(100, state.warmth + 15);
+        closeMinigame();
+        return;
+    }
+    if (minigame.playerSeq.length === minigame.sequence.length) {
+        document.getElementById("minigamePrompt").textContent = "Резонанс! +20 Нот, +40 Тепла и Щит!";
+        state.notes += 20; state.warmth = Math.min(100, state.warmth + 40); state.shield = true;
+        saveProgress(); closeMinigame();
+    }
+}
+function closeMinigame() {
+    minigame.acceptingInput = false;
+    setTimeout(() => { document.getElementById("minigameModal").classList.remove("active"); minigame.active = false; state.paused = false; }, 800);
+}
+document.querySelectorAll(".rune-btn").forEach(b => b.addEventListener("click", () => handleRunePress(parseInt(b.dataset.rune))));
+
+// --- 10. УНИКАЛЬНЫЙ РЕНДЕРЕР 42 РАЗНЫХ 2D-МОДЕЛЕК ПЕРСОНАЖЕЙ ---
+function drawCharacterModel(skin) {
+    const flap = Math.sin(player.wingAngle) * 14;
+    const m = skin.model;
+
+    // 1. АНИМЕ-МОДЕЛИ (Гуманоидные парящие герои с причёсками, плащами, оружием и аурами)
+    if (m.startsWith("anime_")) {
+        // Аура чакры / проклятой энергии / магии ветра
+        const aura = ctx.createRadialGradient(0, 0, 5, 0, 0, 34);
+        aura.addColorStop(0, skin.glow);
+        aura.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = aura;
+        ctx.beginPath(); ctx.arc(0, 0, 34, 0, Math.PI * 2); ctx.fill();
+
+        // Развевающийся плащ / шарф (Акацуки, Золотой Рассвет, повязка)
+        ctx.fillStyle = m === "anime_itachi" ? "#090d16" : (m === "anime_yuno" ? "#065f46" : skin.secondary);
+        ctx.beginPath();
+        ctx.moveTo(-6, -4);
+        ctx.lineTo(-30, -8 + flap * 0.5);
+        ctx.lineTo(-28, 10 + flap * 0.4);
+        ctx.lineTo(-4, 6);
+        ctx.closePath();
+        ctx.fill();
+        if (m === "anime_itachi") { // Красные облака Акацуки
+            ctx.fillStyle = "#ef4444";
+            ctx.beginPath(); ctx.arc(-18, 1, 3.5, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Тело в летящей позе
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.roundRect(-12, -5, 22, 11, 5); ctx.fill();
+
+        // Оружие за спиной (Гигантский чёрный меч Асты или Гримуар Юно)
+        if (m === "anime_asta") {
+            ctx.fillStyle = "#111827";
+            ctx.strokeStyle = "#ef4444";
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(-8, -6); ctx.lineTo(-34, -22); ctx.lineTo(-30, -14); ctx.lineTo(-6, -2); ctx.closePath();
+            ctx.fill(); ctx.stroke();
+        } else if (m === "anime_yuno") {
+            ctx.fillStyle = "#fde047";
+            ctx.fillRect(-16, -18, 9, 12);
+        }
+
+        // Голова
+        ctx.fillStyle = "#fed7aa";
+        ctx.beginPath(); ctx.arc(11, -3, 8.5, 0, Math.PI * 2); ctx.fill();
+
+        // Фирменные причёски аниме-персонажей
+        if (m === "anime_naruto") {
+            ctx.fillStyle = "#facc15"; // Жёлтые шипы Наруто
+            ctx.beginPath();
+            ctx.moveTo(4, -9); ctx.lineTo(7, -18); ctx.lineTo(12, -12); ctx.lineTo(17, -19); ctx.lineTo(19, -9); ctx.lineTo(23, -12); ctx.lineTo(18, -4);
+            ctx.fill();
+            // Повязка Конохи
+            ctx.fillStyle = "#1e293b"; ctx.fillRect(4, -9, 14, 3.5);
+            ctx.fillStyle = "#cbd5e1"; ctx.fillRect(10, -9, 6, 3.5);
+        } else if (m === "anime_sasuke" || m === "anime_megumi") {
+            ctx.fillStyle = "#090d16"; // Чёрные колючие волосы
+            ctx.beginPath();
+            ctx.moveTo(2, -5); ctx.lineTo(3, -16); ctx.lineTo(10, -13); ctx.lineTo(16, -18); ctx.lineTo(21, -7); ctx.lineTo(16, -2);
+            ctx.fill();
+            if (m === "anime_sasuke") { // Шаринган
+                ctx.fillStyle = "#ef4444"; ctx.beginPath(); ctx.arc(15, -3, 2, 0, Math.PI * 2); ctx.fill();
+            }
+        } else if (m === "anime_itachi" || m === "anime_kakashi") {
+            ctx.fillStyle = m === "anime_kakashi" ? "#e2e8f0" : "#090d16";
+            ctx.beginPath();
+            ctx.moveTo(3, -7); ctx.lineTo(6, -18); ctx.lineTo(15, -16); ctx.lineTo(20, -8);
+            ctx.fill();
+            if (m === "anime_kakashi") { // Маска и повязка на глазу
+                ctx.fillStyle = "#1e293b"; ctx.fillRect(6, -7, 13, 3.5); ctx.fillRect(11, -3, 8, 6);
+            }
+        } else if (m === "anime_gojo") {
+            ctx.fillStyle = "#ffffff"; // Белые торчащие волосы Годжо
+            ctx.beginPath();
+            ctx.moveTo(3, -8); ctx.lineTo(5, -19); ctx.lineTo(11, -15); ctx.lineTo(16, -20); ctx.lineTo(21, -9);
+            ctx.fill();
+            // Чёрная повязка на глазах Сатору Годжо
+            ctx.fillStyle = "#090d16";
+            ctx.fillRect(5, -7, 15, 5);
+        } else if (m === "anime_yuji" || m === "anime_sukuna") {
+            ctx.fillStyle = "#fb7185"; // Розовые волосы Итадори / Сукуны
+            ctx.beginPath();
+            ctx.moveTo(4, -8); ctx.lineTo(8, -17); ctx.lineTo(15, -16); ctx.lineTo(20, -8);
+            ctx.fill();
+            if (m === "anime_sukuna") { // Чёрные метки проклятий
+                ctx.strokeStyle = "#090d16"; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(11, -6); ctx.lineTo(15, -6); ctx.moveTo(13, -1); ctx.lineTo(17, -1); ctx.stroke();
+            }
+        } else if (m === "anime_asta" || m === "anime_yuno") {
+            ctx.fillStyle = m === "anime_asta" ? "#cbd5e1" : "#1e293b";
+            ctx.beginPath();
+            ctx.moveTo(4, -8); ctx.lineTo(8, -17); ctx.lineTo(15, -16); ctx.lineTo(20, -7);
+            ctx.fill();
+            if (m === "anime_asta") { ctx.fillStyle = "#090d16"; ctx.fillRect(4, -9, 14, 3); }
+        }
+        return;
+    }
+
+    // 2. МОДЕЛИ РЕАЛЬНЫХ ФУТБОЛИСТОВ (Форма с номером, бутсы, причёска и парящий мяч)
+    if (m.startsWith("fb_")) {
+        // Тело в футбольной форме
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.roundRect(-12, -6, 22, 12, 4); ctx.fill();
+        // Полоска/акцент формы
+        ctx.fillStyle = skin.secondary;
+        ctx.fillRect(-6, -6, 5, 12);
+
+        // Ноги и бутсы в беге
+        ctx.fillStyle = skin.secondary;
+        ctx.fillRect(-16, -4 + flap * 0.25, 7, 3.5);
+        ctx.fillRect(-15, 2 - flap * 0.25, 7, 3.5);
+
+        // Руки (у Беллингема фирменно раскинуты в стороны!)
+        ctx.fillStyle = "#fed7aa";
+        if (m === "fb_bellingham") {
+            ctx.fillRect(-2, -16, 4, 32);
+        } else {
+            ctx.fillRect(-2, -11 + flap * 0.2, 6, 4);
+        }
+
+        // Голова футболиста
+        ctx.fillStyle = m === "fb_vinicius" || m === "fb_mbappe" || m === "fb_bellingham" || m === "fb_yamal" ? "#8d5524" : "#fed7aa";
+        ctx.beginPath(); ctx.arc(12, -3, 8, 0, Math.PI * 2); ctx.fill();
+
+        // Индивидуальные причёски и бороды
+        if (m === "fb_messi" || m === "fb_salah") {
+            ctx.fillStyle = "#271c19";
+            ctx.beginPath(); ctx.arc(11, -6, 7.5, Math.PI, 0); ctx.fill(); // Волосы
+            ctx.beginPath(); ctx.arc(13, 1, 5.5, 0, Math.PI); ctx.fill();   // Борода
+        } else if (m === "fb_haaland") {
+            ctx.fillStyle = "#fde047"; // Светлый хвост викинга Холанда
+            ctx.beginPath(); ctx.arc(11, -6, 7.5, Math.PI, 0); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(4, -7); ctx.lineTo(-4, -12); ctx.lineTo(3, -3); ctx.fill();
+        } else if (m === "fb_debruyne") {
+            ctx.fillStyle = "#ea580c"; // Рыжеватая причёска Де Брёйне
+            ctx.beginPath(); ctx.arc(11, -6, 7.5, Math.PI, 0); ctx.fill();
+        } else {
+            ctx.fillStyle = "#0f172a";
+            ctx.beginPath(); ctx.arc(11, -6, 7.5, Math.PI, 0); ctx.fill();
+        }
+
+        // Футбольный мяч перед игроком
+        ctx.fillStyle = "#ffffff";
+        ctx.strokeStyle = "#0f172a";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(24, 5 + Math.sin(state.time * 0.2) * 3, 5.5, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        return;
+    }
+
+    // 3. 22 УНИКАЛЬНЫХ МИСТИЧЕСКИХ / АТМОСФЕРНЫХ МОДЕЛИ
+    if (m === "origami") {
+        // Острый полигональный журавлик
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.moveTo(22, 0); ctx.lineTo(-10, -7); ctx.lineTo(-22, -16); ctx.lineTo(-14, 4); ctx.lineTo(6, 7); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = skin.secondary;
+        ctx.beginPath(); ctx.moveTo(2, -2); ctx.lineTo(-8, -22 + flap); ctx.lineTo(-14, 0); ctx.closePath(); ctx.fill();
+    } else if (m === "mech" || m === "drone") {
+        // Механический шар / дрон с шестернями или антенной
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = skin.secondary; ctx.lineWidth = 3; ctx.stroke();
+        ctx.fillStyle = skin.glow;
+        ctx.beginPath(); ctx.roundRect(4, -5, 9, 6, 3); ctx.fill(); // Визор
+        ctx.beginPath(); ctx.moveTo(-4, -14); ctx.lineTo(-8, -24); ctx.stroke(); // Антенна/ключ
+    } else if (m === "whale" || m === "tardigrade") {
+        // Звёздный кит или Мини-Тихоход с маяком на панцире!
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.ellipse(0, 2, 20, 12, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = skin.secondary;
+        ctx.beginPath(); ctx.moveTo(-18, 2); ctx.lineTo(-30, -8 + flap * 0.4); ctx.lineTo(-28, 10); ctx.closePath(); ctx.fill();
+        if (m === "tardigrade") { // Маленький светящийся маяк на спине Тихохода
+            ctx.fillStyle = "#fde047";
+            ctx.fillRect(-3, -15, 6, 8);
+            ctx.beginPath(); ctx.arc(0, -17, 4, 0, Math.PI * 2); ctx.fill();
+        }
+    } else if (m === "seraph") {
+        // Шестикрылый Серафим с нимбом
+        ctx.strokeStyle = "#fde047"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(4, -17, 9, 3, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = skin.secondary;
+        for (let w = -1; w <= 1; w++) {
+            ctx.beginPath(); ctx.moveTo(-2, w * 3); ctx.quadraticCurveTo(2, -24 + flap + w * 4, 12, -3); ctx.fill();
+        }
+    } else if (m === "cyber") {
+        // Кибер-сёрфер на ховерборде
+        ctx.fillStyle = "#06b6d4";
+        ctx.beginPath(); ctx.roundRect(-18, 9, 36, 5, 3); ctx.fill(); // Ховерборд
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.ellipse(0, -1, 14, 9, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#f43f5e"; ctx.fillRect(5, -5, 10, 4); // Неон-очки
+    } else if (m === "heart") {
+        // Парящее хрустальное сердце в золотой оправе
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath();
+        ctx.moveTo(0, 12); ctx.bezierCurveTo(-20, -2, -12, -18, 0, -6); ctx.bezierCurveTo(12, -18, 20, -2, 0, 12);
+        ctx.fill();
+        ctx.strokeStyle = "#fde047"; ctx.lineWidth = 2.5; ctx.stroke();
+    } else {
+        // Остальные уникальные существа (Дракончик, Фея, Капитан, Самурай, Совёнок, Кодама, Барс, Ворон и др.)
+        ctx.fillStyle = skin.secondary;
+        ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(-28, -7 + Math.sin(state.time * 0.2) * 3); ctx.lineTo(-24, 6); ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = skin.primary;
+        ctx.beginPath(); ctx.ellipse(0, 0, 17, 11, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Аксессуары головы (треуголка, шляпа, шлем, рожки, ушки)
+        if (m === "captain" || m === "wizard" || m === "samurai") {
+            ctx.fillStyle = skin.secondary;
+            ctx.beginPath(); ctx.moveTo(-4, -9); ctx.lineTo(6, -22); ctx.lineTo(16, -9); ctx.closePath(); ctx.fill();
+        } else if (m === "dragon" || m === "owl" || m === "cat" || m === "kodama") {
+            ctx.fillStyle = skin.glow;
+            ctx.beginPath(); ctx.moveTo(4, -9); ctx.lineTo(2, -18); ctx.lineTo(9, -10); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(10, -9); ctx.lineTo(11, -18); ctx.lineTo(15, -9); ctx.fill();
+        } else if (m === "astro") {
+            ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(8, -2, 10, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        // Крыло
+        ctx.fillStyle = m === "fairy" ? "rgba(244,114,182,0.75)" : skin.secondary;
+        ctx.beginPath(); ctx.moveTo(-4, -2); ctx.quadraticCurveTo(4, -22 + flap, 12, -4); ctx.closePath(); ctx.fill();
+
+        // Глаз
+        ctx.fillStyle = m === "raven" ? "#ef4444" : "#0f172a";
+        ctx.beginPath(); ctx.arc(9, -3, m === "owl" ? 3.8 : 2.5, 0, Math.PI * 2); ctx.fill();
+    }
+}
+
+// --- 11. ЧАСТИЦЫ СКИНОВ (VFX) ---
+function emitSkinParticles(skin) {
+    if (Math.random() > 0.65 && !state.holdingFly && state.dashTimer <= 0) return;
+    particles.push({
+        x: player.x - 10,
+        y: player.y + (Math.random() - 0.5) * 14,
+        vx: -2.4 - Math.random() * 2.2,
+        vy: (Math.random() - 0.5) * 1.6,
+        life: 1,
+        decay: 0.02 + Math.random() * 0.02,
+        size: 3.5 + Math.random() * 4,
+        vfx: skin.vfx,
+        color: Math.random() > 0.5 ? skin.secondary : skin.glow
+    });
+}
+
+function drawParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.strokeStyle = p.color;
+
+        if (p.vfx === "rasengan" || p.vfx === "hollowpurple" || p.vfx === "halo") {
+            ctx.beginPath(); ctx.arc(p.x, p.y, (1.2 - p.life) * 16 + 3, 0, Math.PI * 2);
+            ctx.lineWidth = 2; ctx.stroke();
+        } else if (p.vfx === "chidori" || p.vfx === "lightning" || p.vfx === "blackflash" || p.vfx === "slashes") {
+            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - 10, p.y + (Math.random() - 0.5) * 16); ctx.lineTo(p.x - 20, p.y);
+            ctx.lineWidth = 2.2; ctx.stroke();
+        } else if (p.vfx === "crows" || p.vfx === "darkfeathers") {
+            ctx.fillStyle = "#090d16";
+            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x - 7, p.y - 4); ctx.lineTo(p.x - 4, p.y); ctx.lineTo(p.x - 7, p.y + 4); ctx.fill();
+        } else if (p.vfx === "goldball" || p.vfx === "siuuu" || p.vfx === "samba") {
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 1.1, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 1; ctx.stroke();
+        } else if (p.vfx === "stars" || p.vfx === "heart" || p.vfx === "crowns") {
+            ctx.translate(p.x, p.y);
+            ctx.beginPath();
+            for (let s = 0; s < 4; s++) { ctx.rotate(Math.PI / 2); ctx.lineTo(0, -p.size * 1.6); ctx.lineTo(p.size * 0.4, -p.size * 0.4); }
+            ctx.closePath(); ctx.fill();
+        } else if (p.vfx === "petals" || p.vfx === "sakura" || p.vfx === "windclover") {
+            ctx.translate(p.x, p.y); ctx.rotate(p.life * 6);
+            ctx.beginPath(); ctx.ellipse(0, 0, p.size * 1.4, p.size * 0.65, 0, 0, Math.PI * 2); ctx.fill();
+        } else {
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+    }
+}
+
+// --- 12. ОТРИСОВКА ФОНА И СРАВНЕНИЯ РЕЖИМОВ (ЛИНЕЙНАЯ / 2X / 4X / 8X) ---
+function lerpColor(hex1, hex2, t) {
+    const c1 = parseInt(hex1.slice(1), 16), c2 = parseInt(hex2.slice(1), 16);
+    const r = Math.round(((c1 >> 16) & 255) * (1 - t) + ((c2 >> 16) & 255) * t);
+    const g = Math.round(((c1 >> 8) & 255) * (1 - t) + ((c2 >> 8) & 255) * t);
+    const b = Math.round((c1 & 255) * (1 - t) + (c2 & 255) * t);
+    return `rgb(${r},${g},${b})`;
+}
+
+function drawBackground(world) {
+    const painFactor = Math.max(0, (60 - state.harmony) / 60);
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, lerpColor(world.skyTop, "#1e1b4b", painFactor * 0.5));
+    grad.addColorStop(1, lerpColor(world.skyBot, "#881337", painFactor * 0.45));
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // God Rays (объёмные лучи на 4X и 8X)
+    if (state.renderScale >= 4) {
+        ctx.save();
+        ctx.globalAlpha = state.renderScale === 8 ? 0.14 : 0.07;
+        ctx.fillStyle = "#fef9c3";
+        for (let r = 0; r < 5; r++) {
+            ctx.beginPath();
+            ctx.moveTo(W * 0.75, H * 0.22);
+            ctx.lineTo(W * (0.1 + r * 0.2), H);
+            ctx.lineTo(W * (0.18 + r * 0.2), H);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    // Силуэт Великого Тихохода в глубине облаков
+    ctx.save();
+    const breath = Math.sin(state.time * 0.025) * 10;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.17)";
+    ctx.beginPath(); ctx.ellipse(W * 0.58, H * 0.84 + breath, W * 0.34, H * 0.16, -0.04, 0, Math.PI * 2); ctx.fill();
+    for (let s = -2; s <= 2; s++) {
+        ctx.beginPath(); ctx.arc(W * 0.58 + s * (W * 0.09), H * 0.74 + breath + Math.abs(s) * 8, W * 0.06, Math.PI, 0); ctx.fill();
+    }
+    // Микротекстура травы и камней на спине Тихохода (на 4X и 8X!)
+    if (state.renderScale >= 4) {
+        ctx.strokeStyle = "rgba(52, 211, 153, 0.28)";
+        ctx.lineWidth = 1.5;
+        for (let g = -14; g <= 14; g++) {
+            const gx = W * 0.58 + g * 18;
+            const gy = H * 0.73 + breath + Math.abs(g) * 1.4;
+            ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx - 3, gy - 9); ctx.stroke();
+        }
+    }
+    ctx.restore();
+
+    // Фоновые стаи птиц
+    bgBirds.forEach(b => {
+        if (state.playing && !state.paused) {
+            b.x -= b.speed;
+            if (b.x < -30) { b.x = W + 30; b.y = 50 + Math.random() * (H * 0.45); }
+        }
+        ctx.strokeStyle = "rgba(255,255,255,0.35)";
+        ctx.lineWidth = 1.5;
+        const wing = Math.sin(state.time * 0.12 + b.phase) * 4;
+        ctx.beginPath();
+        ctx.moveTo(b.x - 6, b.y + wing); ctx.lineTo(b.x, b.y); ctx.lineTo(b.x + 6, b.y + wing);
+        ctx.stroke();
+    });
+
+    // Параллакс облака с разной детализацией по режимам рендера
+    clouds.forEach(c => {
+        if (state.playing && !state.paused) {
+            c.x -= c.speed * (1 + world.wind) * (state.dashTimer > 0 ? 2.3 : 1);
+            if (c.x + c.w < -60) { c.x = W + 80; c.y = Math.random() * H; }
+        }
+        ctx.save();
+        ctx.globalAlpha = 0.22 + c.layer * 0.12;
+        ctx.fillStyle = world.cloud;
+        ctx.beginPath(); ctx.roundRect(c.x, c.y, c.w, c.h, 28); ctx.fill();
+        if (state.renderScale >= 2) {
+            ctx.strokeStyle = "rgba(255,255,255,0.45)";
+            ctx.lineWidth = state.renderScale >= 4 ? 2 : 1;
+            ctx.stroke();
+        }
+        ctx.restore();
+    });
+}
+
+// Сравнительный экран ЛИНЕЙНАЯ | 2X | 4X | 8X (как на прикреплённом скриншоте)
+function drawSplitComparisonOverlay() {
+    if (!state.splitCompare) return;
+    const labels = ["ЛИНЕЙНАЯ", "2X", "4X", "8X"];
+    const colW = W / 4;
+    ctx.save();
+    for (let i = 0; i < 4; i++) {
+        const x0 = i * colW;
+        // Имитация различий фильтрации в каждом столбце
+        if (i === 0) {
+            ctx.fillStyle = "rgba(15, 23, 42, 0.22)"; // Мягкое размытие линейной фильтрации
+            ctx.fillRect(x0, 0, colW, H);
+        } else if (i === 3) {
+            ctx.fillStyle = "rgba(253, 224, 71, 0.05)"; // Повышенная контрастность 8X
+            ctx.fillRect(x0, 0, colW, H);
+        }
+        if (i > 0) {
+            ctx.strokeStyle = "#1d4ed8";
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(x0, 0); ctx.lineTo(x0, H); ctx.stroke();
+        }
+        // Красная подпись внизу столбца, как на скриншоте
+        ctx.font = "italic 800 22px Montserrat, sans-serif";
+        ctx.fillStyle = "#ef4444";
+        ctx.shadowColor = "rgba(0,0,0,0.85)";
+        ctx.shadowBlur = 6;
+        ctx.fillText(labels[i], x0 + 18, H - 62);
+    }
+    ctx.restore();
+}
+
+// --- 13. СПАВН И ОСНОВНОЙ ИГРОВОЙ ЦИКЛ ---
+let spawnTimer = 0;
+function spawnEntities(world) {
+    spawnTimer++;
+    if (spawnTimer % 44 === 0) {
+        const r = Math.random();
+        const kind = r < 0.65 ? "note" : (r < 0.82 ? "warmth" : (r < 0.92 ? "shield" : "magnet"));
+        collectibles.push({ x: W + 40, y: 80 + Math.random() * (H - 160), kind, phase: Math.random() * 6 });
+    }
+    if (spawnTimer % 155 === 0) {
+        const types = ["bud", "pedestal", "scroll", "ring", "portal", "chest"];
+        const chosen = types[Math.floor(Math.random() * types.length)];
+        interactives.push({ x: W + 60, y: 110 + Math.random() * (H - 220), type: chosen, activated: false, radius: chosen === "ring" ? 38 : 26 });
+    }
+    const hInt = Math.max(40, Math.floor(110 - world.hazardRate * 55));
+    if (spawnTimer % hInt === 0) {
+        const hTypes = ["vortex", "debris", "airpocket"];
+        const hType = hTypes[Math.floor(Math.random() * hTypes.length)];
+        hazards.push({ x: W + 60, y: 70 + Math.random() * (H - 140), type: hType, radius: hType === "airpocket" ? 46 : 25, angle: 0, nearMissed: false });
+    }
+}
+
+let frameCount = 0, lastFpsTime = performance.now();
+function update() {
+    frameCount++;
+    const now = performance.now();
+    if (now - lastFpsTime >= 600) {
+        const fps = Math.round((frameCount * 1000) / (now - lastFpsTime));
+        document.getElementById("fpsCounter").textContent = `${fps} FPS (${state.renderScale === 1 ? "ЛИН" : state.renderScale + "X"})`;
+        frameCount = 0; lastFpsTime = now;
+    }
+
+    state.time++;
+    const world = WORLDS[state.worldIdx];
+
+    if (state.playing && !state.paused) {
+        const timeScale = state.slowMoActive && state.slowMoEnergy > 0 ? 0.45 : 1.0;
+        if (state.slowMoActive && state.slowMoEnergy > 0) state.slowMoEnergy = Math.max(0, state.slowMoEnergy - 0.55);
+        else { state.slowMoActive = false; state.slowMoEnergy = Math.min(100, state.slowMoEnergy + 0.25); }
+
+        if (state.loopTimer > 0) {
+            state.loopTimer--;
+            player.y += Math.sin(state.loopTimer * 0.22) * 7;
+        } else {
+            const gravity = 0.26 * timeScale;
+            const lift = state.holdingFly ? -0.58 * timeScale : 0;
+            player.vy = (player.vy + gravity + lift + Math.sin(state.time * 0.03) * 0.05) * 0.94;
+            player.y += player.vy;
+        }
+
+        if (player.y < 28) { player.y = 28; player.vy = 0; }
+        if (player.y > H - 28) { player.y = H - 28; player.vy = -2; }
+        player.wingAngle += state.holdingFly ? 0.36 : 0.14;
+
+        if (state.dashTimer > 0) state.dashTimer--;
+        if (state.dashCooldown > 0) state.dashCooldown--;
+        if (state.magnetTimer > 0) state.magnetTimer--;
+        if (state.screenShake > 0) state.screenShake *= 0.88;
+        if (state.comboTimer > 0) state.comboTimer--; else state.combo = 1;
+
+        const speed = (3.5 + world.wind * 1.4) * (state.dashTimer > 0 ? 2.35 : 1) * timeScale;
+        state.distance += speed * 0.12;
+        state.worldProgress += speed;
+
+        state.warmth = Math.max(0, state.warmth - (0.014 + (100 - world.harmony) * 0.0003));
+        if (state.warmth <= 0) {
+            state.warmth = 45; player.vy = -4;
+            showStoryToast("Шурш", "Тёплый восходящий поток снова поднял вас ввысь!");
+        }
+
+        if (state.worldProgress >= state.worldLength) {
+            state.worldProgress = 0;
+            if (state.worldIdx < WORLDS.length - 1) selectWorld(state.worldIdx + 1, true);
+        }
+
+        const skin = SKINS.find(s => s.id === state.currentSkin) || SKINS[0];
+        emitSkinParticles(skin);
+        spawnEntities(world);
+
+        // Сборные предметы + магнит + комбо
+        for (let i = collectibles.length - 1; i >= 0; i--) {
+            const c = collectibles[i];
+            c.x -= speed;
+            c.y += Math.sin(state.time * 0.05 + c.phase) * 0.6;
+            if (state.magnetTimer > 0 && Math.hypot(player.x - c.x, player.y - c.y) < 220) {
+                c.x += (player.x - c.x) * 0.12;
+                c.y += (player.y - c.y) * 0.12;
+            }
+            if (Math.hypot(player.x - c.x, player.y - c.y) < 30) {
+                if (c.kind === "note") {
+                    state.combo = Math.min(10, state.combo + 1);
+                    state.comboTimer = 190;
+                    const gained = 1 * Math.ceil(state.combo / 2);
+                    state.notes += gained;
+                    advanceQuest("notes", 1);
+                    audio.playSFX("note");
+                } else if (c.kind === "warmth") {
+                    state.warmth = Math.min(100, state.warmth + 24);
+                    audio.playSFX("bloom");
+                } else if (c.kind === "shield") {
+                    state.shield = true; audio.playSFX("bloom");
+                } else if (c.kind === "magnet") {
+                    state.magnetTimer = 480; audio.playSFX("bloom");
+                    showStoryToast("Магнит Гармонии", "Небесные ноты сами притягиваются к вам!");
+                }
+                saveProgress(); collectibles.splice(i, 1); continue;
+            }
+            if (c.x < -40) collectibles.splice(i, 1);
+        }
+
+        // Интерактивные объекты
+        for (let i = interactives.length - 1; i >= 0; i--) {
+            const obj = interactives[i];
+            obj.x -= speed;
+            if (!obj.activated && Math.hypot(player.x - obj.x, player.y - obj.y) < obj.radius + 16) {
+                obj.activated = true;
+                advanceQuest("interact", 1);
+                if (obj.type === "bud") {
+                    state.warmth = Math.min(100, state.warmth + 30); state.dashTimer = 45; audio.playSFX("bloom");
+                } else if (obj.type === "pedestal") {
+                    triggerPedestalMinigame();
+                } else if (obj.type === "scroll") {
+                    state.notes += 8; state.harmony = Math.min(100, state.harmony + 6); audio.playSFX("note");
+                    showStoryToast(world.story[0], world.story[1]);
+                } else if (obj.type === "ring") {
+                    state.dashTimer = 60; state.notes += 5; audio.playSFX("bloom");
+                } else if (obj.type === "portal") {
+                    state.worldProgress += 450; state.dashTimer = 50; audio.playSFX("bloom");
+                    showStoryToast("Облачный Портал", "Пространство сжалось — вы мгновенно преодолели 450 метров!");
+                } else if (obj.type === "chest") {
+                    state.notes += 15; state.shield = true; audio.playSFX("bloom");
+                    showStoryToast("Реликвия Леи", "Открыт древний сундук: +15 нот и энергетический щит!");
+                }
+                saveProgress();
+            }
+            if (obj.x < -60) interactives.splice(i, 1);
+        }
+
+        // Препятствия + Near-Miss + Dash-Smash
+        for (let i = hazards.length - 1; i >= 0; i--) {
+            const h = hazards[i];
+            h.x -= speed * (h.type === "vortex" ? 1.2 : 1);
+            h.angle += 0.08;
+            const dist = Math.hypot(player.x - h.x, player.y - h.y);
+
+            // Near-Miss (уворот впритирку)
+            if (!h.nearMissed && dist > h.radius + 14 && dist < h.radius + 46 && h.x < player.x) {
+                h.nearMissed = true;
+                state.notes += 3;
+                advanceQuest("nearmiss", 1);
+                showStoryToast("Идеальный уворот!", "+3 ноты за полёт впритирку к вихрю!");
+            }
+
+            if (dist < h.radius + 12) {
+                if (state.dashTimer > 0) {
+                    // Dash-Smash: разрушение препятствия в рывке
+                    state.notes += 4; state.screenShake = 8; audio.playSFX("bloom");
+                    hazards.splice(i, 1); continue;
+                } else if (h.type === "airpocket") {
+                    player.vy += 0.85;
+                } else {
+                    if (state.shield) { state.shield = false; audio.playSFX("bloom"); }
+                    else { state.warmth = Math.max(5, state.warmth - 18); player.vy = -4.5; state.screenShake = 12; audio.playSFX("hurt"); }
+                    hazards.splice(i, 1); continue;
+                }
+            }
+            if (h.x < -60) hazards.splice(i, 1);
+        }
+    }
+
+    // Рендер кадра с учётом тряски камеры
+    ctx.save();
+    if (state.screenShake > 0.5) {
+        ctx.translate((Math.random() - 0.5) * state.screenShake, (Math.random() - 0.5) * state.screenShake);
+    }
+
+    drawBackground(world);
+
+    // Интерактивные объекты
+    interactives.forEach(obj => {
+        ctx.save(); ctx.translate(obj.x, obj.y);
+        if (obj.type === "bud") {
+            ctx.fillStyle = obj.activated ? "#f472b6" : "#34d399";
+            ctx.beginPath(); ctx.arc(0, 0, obj.activated ? 22 : 14, 0, Math.PI * 2); ctx.fill();
+        } else if (obj.type === "pedestal") {
+            ctx.fillStyle = "#cbd5e1"; ctx.fillRect(-10, -18, 20, 36);
+            ctx.fillStyle = "#fde047"; ctx.beginPath(); ctx.arc(0, -24, 7, 0, Math.PI * 2); ctx.fill();
+        } else if (obj.type === "scroll") {
+            ctx.fillStyle = "#fde68a"; ctx.beginPath(); ctx.roundRect(-14, -10, 28, 20, 5); ctx.fill();
+        } else if (obj.type === "ring") {
+            ctx.strokeStyle = "#fbbf24"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(0, 0, 14, 34, 0, 0, Math.PI * 2); ctx.stroke();
+        } else if (obj.type === "portal") {
+            ctx.strokeStyle = "#a855f7"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(0, 0, 22 + Math.sin(state.time * 0.15) * 3, 0, Math.PI * 2); ctx.stroke();
+        } else if (obj.type === "chest") {
+            ctx.fillStyle = "#b45309"; ctx.fillRect(-15, -11, 30, 22);
+            ctx.strokeStyle = "#fde047"; ctx.lineWidth = 2; ctx.strokeRect(-15, -11, 30, 22);
+        }
+        ctx.restore();
+    });
+
+    // Сборные предметы
+    collectibles.forEach(c => {
+        ctx.save(); ctx.translate(c.x, c.y);
+        if (c.kind === "note") {
+            ctx.fillStyle = "#fde047"; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(5, -14, 3, 14);
+        } else if (c.kind === "warmth") {
+            ctx.fillStyle = "#fb923c"; ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+        } else if (c.kind === "shield") {
+            ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.stroke();
+        } else {
+            ctx.fillStyle = "#a78bfa"; ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.restore();
+    });
+
+    // Препятствия
+    hazards.forEach(h => {
+        ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(h.angle);
+        if (h.type === "vortex") {
+            ctx.strokeStyle = "rgba(148, 163, 184, 0.85)"; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, h.radius, 0, Math.PI * 1.5); ctx.stroke();
+        } else if (h.type === "debris") {
+            ctx.fillStyle = "#475569"; ctx.fillRect(-16, -8, 32, 16);
+        } else {
+            ctx.strokeStyle = "rgba(56, 189, 248, 0.4)"; ctx.setLineDash([6, 6]);
+            ctx.beginPath(); ctx.arc(0, 0, h.radius, 0, Math.PI * 2); ctx.stroke();
+        }
+        ctx.restore();
+    });
+
+    drawParticles();
+
+    // Отрисовка выбранной 2D-модели персонажа
+    const activeSkin = SKINS.find(s => s.id === state.currentSkin) || SKINS[0];
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    ctx.rotate(Math.max(-0.45, Math.min(0.45, player.vy * 0.055)));
+    if (state.shield) {
+        ctx.strokeStyle = "#38bdf8"; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(0, 0, 27, 0, Math.PI * 2); ctx.stroke();
+    }
+    drawCharacterModel(activeSkin);
+    ctx.restore();
+
+    drawSplitComparisonOverlay();
+    ctx.restore();
+
+    updateHUD();
+    requestAnimationFrame(update);
+}
+
+// --- 14. ОБНОВЛЕНИЕ HUD, КАТАЛОГОВ И АДМИН-КНОПКИ ---
+function updateHUD() {
+    document.getElementById("warmthBar").style.width = `${state.warmth}%`;
+    document.getElementById("harmonyBar").style.width = `${state.harmony}%`;
+    document.getElementById("notesCount").textContent = state.notes;
+    document.getElementById("comboBadge").textContent = `x${state.combo} Комбо`;
+    document.getElementById("distanceLabel").textContent = `${Math.floor(state.distance)} м`;
+    document.getElementById("shieldBadge").style.opacity = state.shield ? "1" : "0.3";
+    document.getElementById("magnetBadge").style.opacity = state.magnetTimer > 0 ? "1" : "0.3";
+    document.getElementById("slowMoStatus").textContent = `${Math.round(state.slowMoEnergy)}%`;
+
+    const dashEl = document.getElementById("dashStatus");
+    if (state.dashTimer > 0) { dashEl.textContent = "ПОТОК!"; dashEl.style.color = "#fde047"; }
+    else if (state.dashCooldown > 0) { dashEl.textContent = `${Math.ceil(state.dashCooldown / 60)}с`; dashEl.style.color = "#94a3b8"; }
+    else { dashEl.textContent = "ГОТОВ"; dashEl.style.color = "#34d399"; }
+}
+
+function selectWorld(idx, autoProgress = false) {
+    state.worldIdx = idx;
+    if (idx + 1 > state.unlockedWorlds) state.unlockedWorlds = idx + 1;
+    const w = WORLDS[idx];
+    state.harmony = w.harmony;
+    document.getElementById("hudWorldIndex").textContent = `МИР ${idx + 1} / 20`;
+    document.getElementById("hudWorldTitle").textContent = w.name;
+    document.getElementById("hudWorldMechanic").textContent = w.sub;
+    audio.trackIdx = idx % TRACKS.length;
+    if (audio.isPlayingMusic) audio.changeTrack(0); else audio.updateTrackUI();
+    if (state.lastStoryWorld !== idx) { state.lastStoryWorld = idx; showStoryToast(w.story[0], w.story[1]); }
+    saveProgress(); renderWorldsGrid();
+    if (!autoProgress) closeModals();
+}
+
+function renderWorldsGrid() {
+    const grid = document.getElementById("worldsGrid");
+    grid.innerHTML = "";
+    WORLDS.forEach((w, i) => {
+        const unlocked = state.adminUnlocked || i < state.unlockedWorlds;
+        const card = document.createElement("div");
+        card.className = `item-card ${unlocked ? "" : "locked"} ${state.worldIdx === i ? "selected" : ""}`;
+        card.innerHTML = `
+            <div>
+                <div style="font-size:0.68rem; color:#fcd34d; font-weight:700;">МИР ${i + 1} ${unlocked ? "✦" : "🔒"}</div>
+                <div style="font-weight:700; font-size:0.9rem; margin:2px 0;">${w.name}</div>
+                <div style="font-size:0.72rem; color:#cbd5e1;">${w.sub}</div>
+            </div>
+            <div style="height:5px; border-radius:4px; background:linear-gradient(90deg, ${w.skyTop}, ${w.skyBot});"></div>
+        `;
+        if (unlocked) card.onclick = () => { state.worldProgress = 0; selectWorld(i, false); if (!state.playing) startGame(); };
+        grid.appendChild(card);
+    });
+}
+
+function renderSkinsGrid() {
+    document.getElementById("modalNotesCount").textContent = state.notes;
+    const grid = document.getElementById("skinsGrid");
+    grid.innerHTML = "";
+    const filtered = state.skinFilter === "all" ? SKINS : SKINS.filter(s => s.cat === state.skinFilter);
+    filtered.forEach(s => {
+        const owned = state.adminUnlocked || state.unlockedSkins.includes(s.id);
+        const isSelected = state.currentSkin === s.id;
+        const tag = s.cat === "anime" ? "АНИМЕ" : (s.cat === "football" ? "ФУТБОЛ" : "МИР");
+        const card = document.createElement("div");
+        card.className = `item-card ${isSelected ? "selected" : ""}`;
+        card.innerHTML = `
+            <div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.65rem; padding:2px 6px; border-radius:5px; background:rgba(255,255,255,0.12); color:#7dd3fc; font-weight:700;">${tag}</span>
+                    <span style="font-size:0.72rem; font-weight:700; color:${owned ? "#34d399" : "#fde047"};">
+                        ${isSelected ? "ВЫБРАНО" : (owned ? "ОТКРЫТО" : `🎵 ${s.cost}`)}
+                    </span>
+                </div>
+                <div style="font-weight:700; font-size:0.92rem; margin:5px 0 3px;">${s.name}</div>
+                <div style="font-size:0.72rem; color:#cbd5e1;">${s.desc}</div>
+            </div>
+        `;
+        card.onclick = () => {
+            if (owned) { state.currentSkin = s.id; saveProgress(); renderSkinsGrid(); }
+            else if (state.notes >= s.cost) {
+                state.notes -= s.cost; state.unlockedSkins.push(s.id); state.currentSkin = s.id;
+                audio.playSFX("bloom"); saveProgress(); renderSkinsGrid();
+            } else {
+                showStoryToast("Ангар 42 Скинов", `Не хватает ${s.cost - state.notes} нот, или нажмите тайную звезду ✦ в правом нижнем углу!`);
+            }
+        };
+        grid.appendChild(card);
+    });
+}
+
+function renderFeaturesGrid() {
+    const grid = document.getElementById("featuresGrid");
+    if (grid.children.length > 0) return;
+    FEATURES_100.forEach(text => {
+        const div = document.createElement("div");
+        div.className = "feature-row";
+        div.innerHTML = `<span style="color:#34d399; font-weight:800;">✔</span><span>${text}</span>`;
+        grid.appendChild(div);
+    });
+}
+
+function openModal(id) {
+    state.paused = true;
+    closeModals(true);
+    if (id === "worldsModal") renderWorldsGrid();
+    if (id === "skinsModal") renderSkinsGrid();
+    if (id === "featuresModal") renderFeaturesGrid();
+    document.getElementById(id).classList.remove("hidden");
+}
+
+function closeModals(keepPaused = false) {
+    document.querySelectorAll(".modal-backdrop").forEach(m => m.classList.add("hidden"));
+    if (!keepPaused && state.playing && !minigame.active) state.paused = false;
+}
+
+function startGame() {
+    state.playing = true; state.paused = false;
+    closeModals(); audio.startMusic(); selectWorld(state.worldIdx, true);
+}
+
+// Секретная кнопка админа: мгновенно открывает ВСЕ 42 скина, ВСЕ 20 миров и +5000 нот
+document.getElementById("secretAdminBtn").addEventListener("click", function () {
+    state.adminUnlocked = true;
+    state.unlockedWorlds = WORLDS.length;
+    state.unlockedSkins = SKINS.map(s => s.id);
+    state.notes += 5000;
+    this.classList.add("unlocked");
+    saveProgress(); renderWorldsGrid(); renderSkinsGrid();
+    audio.playSFX("bloom");
+    showStoryToast("Тайная Звезда Хранителя ✦", "Разблокированы ВСЕ 42 скина (Аниме, Футболисты, Миры), 20 локаций и +5000 нот!");
+});
+if (state.adminUnlocked) document.getElementById("secretAdminBtn").classList.add("unlocked");
+
+// --- 15. ПЕРЕКЛЮЧАТЕЛИ РЕНДЕРА (ЛИНЕЙНАЯ / 2X / 4X / 8X) И УПРАВЛЕНИЕ ---
+document.querySelectorAll("#renderScalePills .r-pill[data-scale]").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll("#renderScalePills .r-pill[data-scale]").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.renderScale = parseInt(btn.dataset.scale);
+        applyRenderResolution();
+        showStoryToast("Рендеризация", `Активен режим детализации: ${btn.textContent}`);
+    });
+});
+
+document.getElementById("splitCompareBtn").addEventListener("click", function () {
+    state.splitCompare = !state.splitCompare;
+    this.classList.toggle("active", state.splitCompare);
+});
+
+document.querySelectorAll("#aaPills .r-pill[data-aa]").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll("#aaPills .r-pill[data-aa]").forEach(b => b.classList.remove("aa-active"));
+        btn.classList.add("aa-active");
+        state.aaMode = btn.dataset.aa;
+        applyRenderResolution();
+    });
+});
+
+document.querySelectorAll("#skinCategoryTabs .glass-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+        document.querySelectorAll("#skinCategoryTabs .glass-btn").forEach(b => b.classList.remove("active-pill"));
+        btn.classList.add("active-pill");
+        state.skinFilter = btn.dataset.cat;
+        renderSkinsGrid();
+    });
+});
+
+function triggerDash() {
+    if (!state.playing || state.paused || state.dashCooldown > 0) return;
+    state.dashTimer = 38; state.dashCooldown = 135; state.screenShake = 6;
+    advanceQuest("dash", 1); audio.playSFX("flap");
+}
+function triggerLoop() {
+    if (!state.playing || state.paused || state.loopTimer > 0) return;
+    state.loopTimer = 28; state.notes += 1; audio.playSFX("note");
+}
+
+canvas.addEventListener("mousedown", e => {
+    if (e.button === 2) { triggerDash(); return; }
+    state.holdingFly = true; audio.init();
+    if (state.playing && !state.paused) audio.playSFX("flap");
+});
+window.addEventListener("mouseup", () => { state.holdingFly = false; });
+canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+canvas.addEventListener("touchstart", e => {
+    e.preventDefault(); state.holdingFly = true; audio.init();
+    if (state.playing && !state.paused) audio.playSFX("flap");
+}, { passive: false });
+window.addEventListener("touchend", () => { state.holdingFly = false; });
+
+window.addEventListener("keydown", e => {
+    if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") {
+        if (!state.holdingFly && state.playing && !state.paused) audio.playSFX("flap");
+        state.holdingFly = true;
+    }
+    if (e.code === "ShiftLeft" || e.code === "ShiftRight") triggerDash();
+    if (e.code === "KeyE") state.slowMoActive = true;
+    if (e.code === "KeyQ") triggerLoop();
+    if (minigame.active) {
+        if (e.key === "1") handleRunePress(0);
+        if (e.key === "2") handleRunePress(1);
+        if (e.key === "3") handleRunePress(2);
+    }
+});
+window.addEventListener("keyup", e => {
+    if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW") state.holdingFly = false;
+    if (e.code === "KeyE") state.slowMoActive = false;
+});
+
+document.getElementById("dashTrigger").addEventListener("click", triggerDash);
+document.getElementById("slowMoTrigger").addEventListener("click", () => { state.slowMoActive = !state.slowMoActive; });
+document.getElementById("loopTrigger").addEventListener("click", triggerLoop);
+document.getElementById("playPauseBtn").addEventListener("click", () => audio.toggleMusic());
+document.getElementById("prevTrackBtn").addEventListener("click", () => audio.changeTrack(-1));
+document.getElementById("nextTrackBtn").addEventListener("click", () => audio.changeTrack(1));
+document.getElementById("volumeSlider").addEventListener("input", e => audio.setVolume(e.target.value));
+
+renderWorldsGrid();
+renderSkinsGrid();
+requestAnimationFrame(update);
+</script>
+</body>
+</html>
